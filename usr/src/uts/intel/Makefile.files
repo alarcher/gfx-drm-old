@@ -76,6 +76,9 @@ CORE_OBJS +=
 #
 #	Driver modules
 #
+AGPGART_OBJS +=	agpgart.o agp_kstat.o
+AGPTARGET_OBJS += agptarget.o
+AMD64GART_OBJS += amd64_gart.o
 
 #
 #	Kernel linker
@@ -84,6 +87,7 @@ CORE_OBJS +=
 #
 #	misc. modules
 #
+AGP_OBJS += agpmaster.o
 
 
 #

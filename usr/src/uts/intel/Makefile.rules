@@ -56,6 +56,14 @@ $(OBJS_DIR)/%.o:		$(UTSBASE)/intel/zfs/%.c
 	$(COMPILE.c) -o $@ $<
 	$(CTFCONVERT_O)
 
+$(OBJS_DIR)/%.o:		$(UTSBASE)/intel/io/agpgart/%.c
+	$(COMPILE.c) -o $@ $<
+	$(CTFCONVERT_O)
+
+$(OBJS_DIR)/%.o:		$(UTSBASE)/intel/io/agpmaster/%.c
+	$(COMPILE.c) -o $@ $<
+	$(CTFCONVERT_O)
+
 #
 # krtld compiled into unix
 #
@@ -96,6 +104,12 @@ $(LINTS_DIR)/%.ln:		$(SRC)/common/fs/%.c
 	@($(LHEAD) $(LINT.c) $< $(LTAIL))
 
 $(LINTS_DIR)/%.ln:		$(UTSBASE)/intel/zfs/%.c
+	@($(LHEAD) $(LINT.c) $< $(LTAIL))
+
+$(LINTS_DIR)/%.ln:		$(UTSBASE)/intel/io/agpgart/%.c
+	@($(LHEAD) $(LINT.c) $< $(LTAIL))
+
+$(LINTS_DIR)/%.ln:		$(UTSBASE)/intel/io/agpmaster/%.c
 	@($(LHEAD) $(LINT.c) $< $(LTAIL))
 
 $(OBJS_DIR)/kobj.ln		:= CPPFLAGS += -D_DBOOT
