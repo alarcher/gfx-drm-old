@@ -41,6 +41,7 @@ i386_HDRS=			\
 	agp/agpmaster_io.h	\
 	agp/agptarget_io.h	\
 	agpgart.h		\
+	gfx_private.h
 
 sparc_HDRS=
 
