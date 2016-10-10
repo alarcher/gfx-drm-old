@@ -181,3 +181,6 @@ ONBLD_BIN="${ONBLD_TOOLS}/bin"
 # nightly(1) for interactions between environment variables and this command.
 #POST_NIGHTLY=
 
+# XXX "parent root" (where I build gfx_private + AGP)
+export ILLUMOS_GFX_GATE=/tank/ws/illumos-gfx
+

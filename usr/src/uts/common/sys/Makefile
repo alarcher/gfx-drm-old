@@ -38,20 +38,23 @@ i386_HDRS=
 sparc_HDRS=
 
 # Generated headers
-GENHDRS=
+# XXX See "temporary hack" below
+GENHDRS= \
+	agpgart.h \
+	agp/agpamd64gart_io.h \
+	agp/agpdefs.h \
+	agp/agpgart_impl.h \
+	agp/agpmaster_io.h \
+	agp/agptarget_io.h \
+	gfx_private.h
 
 CHKHDRS=
 
-HDRS=				\
-	$(GENHDRS)		\
-	$(CHKHDRS)
+HDRS=	$(GENHDRS) $(CHKHDRS)
 
-all_h: $(GENHDRS)
+all_h:  $(GENHDRS)
 
-install_h:			\
-	$(ROOTDIRS)		\
-	.WAIT			\
-	$(ROOTHDRS)		\
+install_h: all_h .WAIT $(ROOTDIRS) .WAIT $(ROOTHDRS)
 
 clean:
 	$(RM) $(GENHDRS)
@@ -62,3 +65,16 @@ check:	$(CHECKHDRS)
 
 FRC:
 
+#
+# XXX Temporary hack until illumos gate AGP updates arrive.
+# I'll "generate" these headers by copying from my clone of
+# illumos gate where I built the updated AGP code.
+#
+$(GENHDRS) : agp
+
+agp :
+	-mkdir $@
+
+%.h : $(ILLUMOS_GFX_GATE)/usr/src/uts/common/sys/%.h
+	$(RM) $@
+	$(CP) $< $@

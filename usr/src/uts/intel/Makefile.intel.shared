@@ -179,6 +179,8 @@ ALL_DEFS	 = $(DEBUG_DEFS) $(OPTION_DEFS)
 #	DRV_KMODS_64 are built only 64-bit
 #
 DRV_KMODS	+= foo
+DRV_KMODS	+= drm
+DRV_KMODS	+= i915
 
 #
 # Common code drivers

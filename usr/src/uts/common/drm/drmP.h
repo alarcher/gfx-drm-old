@@ -643,7 +643,7 @@ struct drm_gem_object {
 	pfn_t *pfnarray;
 	caddr_t gtt_map_kaddr;
 
-	struct gfxp_pmem_cookie	mempool_cookie;
+	void	*mempool_cookie[3];	/* binary compatible pad */
 
 	struct list_head seg_list;
 

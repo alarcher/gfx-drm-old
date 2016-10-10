@@ -83,8 +83,6 @@ drm_gem_init(struct drm_device *dev)
 	spin_lock_init(&dev->object_name_lock);
 	idr_list_init(&dev->object_name_idr);
 
-	gfxp_mempool_init();
-
 	return 0;
 }
 
@@ -99,13 +97,10 @@ drm_gem_object_free_internal(struct drm_gem_object *obj, int gen)
 {
 	if (obj->pfnarray != NULL)
 		kmem_free(obj->pfnarray, btopr(obj->real_size) * sizeof (pfn_t));
-	if (HAS_MEM_POOL(gen)) {
-		gfxp_free_mempool(&obj->mempool_cookie, obj->kaddr, obj->real_size);
-	} else {
-		(void) ddi_dma_unbind_handle(obj->dma_hdl);
-		ddi_dma_mem_free(&obj->acc_hdl);
-		ddi_dma_free_handle(&obj->dma_hdl);
-	}
+	(void) ddi_dma_unbind_handle(obj->dma_hdl);
+	ddi_dma_mem_free(&obj->acc_hdl);
+	ddi_dma_free_handle(&obj->dma_hdl);
+
 	obj->kaddr = NULL;
 }
 
@@ -204,31 +199,7 @@ err1:
 
 }
 
-/* Alloc GEM object by memory pool */
-static int
-drm_gem_object_alloc_internal_mempool(struct drm_gem_object *obj,
-				size_t size, int flag)
-{
-	int ret;
-	pgcnt_t pgcnt = btopr(size);
-
-	obj->pfnarray = kmem_zalloc(pgcnt * sizeof (pfn_t), KM_NOSLEEP);
-	if (obj->pfnarray == NULL) {
-		DRM_ERROR("Failed to allocate pfnarray ");
-		return (-1);
-	}
-	
-	ret = gfxp_alloc_from_mempool(&obj->mempool_cookie, &obj->kaddr, 
-					obj->pfnarray, pgcnt, flag);
-	if (ret) {
-		DRM_ERROR("Failed to alloc pages from memory pool");
-		kmem_free(obj->pfnarray, pgcnt * sizeof (pfn_t));
-		return (-1);
-	}
-
-	obj->real_size = size;
-	return (0);
-}
+/* Alloc GEM object by memory pool (removed) */
 
 static int
 drm_gem_object_internal(struct drm_device *dev, struct drm_gem_object *obj,
@@ -238,20 +209,10 @@ drm_gem_object_internal(struct drm_device *dev, struct drm_gem_object *obj,
 	int ret, num = 0;
 
 alloc_again:
-	if (HAS_MEM_POOL(gen)) {
-		uint32_t mode;
-		if (gen >= 60)
-			mode = GFXP_MEMORY_CACHED;
-		else
-			mode = GFXP_MEMORY_WRITECOMBINED;
-		ret = drm_gem_object_alloc_internal_mempool(obj, size, mode);
-                if (ret) 
-                        return (-1);
-	} else {
-		ret = drm_gem_object_alloc_internal_normal(dev, obj, size, 0);
-		if (ret)
-			return (-1);
-	}
+	ret = drm_gem_object_alloc_internal_normal(dev, obj, size, 0);
+	if (ret)
+		return (-1);
+
 	tmp_pfn = hat_getpfnum(kas.a_hat, obj->kaddr);
 	if (tmp_pfn != obj->pfnarray[0]) {
 		DRM_ERROR("obj %p map incorrect 0x%lx != 0x%lx",
@@ -682,13 +643,10 @@ drm_gem_object_release(struct drm_gem_object *obj)
 
 	kmem_free(obj->pfnarray, btopr(obj->real_size) * sizeof (pfn_t));
 
-	if (obj->dma_hdl == NULL) {
-		gfxp_free_mempool(&obj->mempool_cookie, obj->kaddr, obj->real_size);
-	} else {
-		(void) ddi_dma_unbind_handle(obj->dma_hdl);
-		ddi_dma_mem_free(&obj->acc_hdl);
-		ddi_dma_free_handle(&obj->dma_hdl);
-	}
+	(void) ddi_dma_unbind_handle(obj->dma_hdl);
+	ddi_dma_mem_free(&obj->acc_hdl);
+	ddi_dma_free_handle(&obj->dma_hdl);
+
 	obj->kaddr = NULL;
 }
 

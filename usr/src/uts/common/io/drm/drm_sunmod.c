@@ -645,6 +645,9 @@ drm_sun_devmap(dev_t dev_id, devmap_cookie_t dhp, offset_t offset,
 
 	case _DRM_GEM:
 		return (__devmap_gem(dev, dhp, map, maplen));
+
+	default:
+		break;
 	}
 
 	return (ENOTSUP);
@@ -745,7 +748,7 @@ static struct modlmisc modlmisc = {
 };
 
 static struct modlinkage modlinkage = {
-	MODREV_1, (void *)&modlmisc, NULL
+	MODREV_1, { (void *)&modlmisc, NULL }
 };
 
 int

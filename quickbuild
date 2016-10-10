@@ -64,6 +64,8 @@ clean|clobber)
   ;;
 install)
   (cd $SRC && $make sgs)
+  (cd $SRC/uts/common/drm && $make -k install_h)
+  (cd $SRC/uts/common/sys && $make -k install_h)
   ;;
 *)
   ;;
@@ -82,7 +84,9 @@ do_kern() {
   *) targ=$1 ;;
   esac
   ( unset SOURCEDEBUG ;
-   (cd $SRC/uts/$x/foo && $make $targ)
+    (cd $SRC/uts/$x/foo && $make $targ) ;
+    (cd $SRC/uts/intel/drm && $make $targ) ;
+    (cd $SRC/uts/intel/i915 && $make $targ)
   )
 }
 
@@ -124,6 +128,9 @@ do_pkg() {
 do_tags() {
 	(cd $SRC ;
 	find uts/common/sys -name '*.[ch]' -print |sort
+	find uts/common/drm -name '*.[ch]' -print |sort
+	find uts/common/io/drm -name '*.[ch]' -print |sort
+	find uts/intel/io/i915 -name '*.[ch]' -print |sort
 	find lib/libfoo -name '*.[ch]' -print |sort
 	find cmd/foo -name '*.[ch]' -print |sort
 	) > $SRC/cscope.files
@@ -147,7 +154,7 @@ usr/lib/libfoo.so
 usr/bin/foo
 "
 
-	(cd $ROOT && tar cfj ../../on-skel-${git_rev}.tar.bz2 $files)
+	(cd $ROOT && tar cfj ../../drm-${git_rev}.tar.bz2 $files)
 }
 
 ################################################################
