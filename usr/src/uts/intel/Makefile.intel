@@ -188,6 +188,8 @@ DRV_KMODS	+= foo
 DRV_KMODS	+= amd64_gart
 DRV_KMODS	+= agpgart
 DRV_KMODS	+= agptarget
+DRV_KMODS	+= drm
+DRV_KMODS	+= i915
 
 #
 # Common code drivers

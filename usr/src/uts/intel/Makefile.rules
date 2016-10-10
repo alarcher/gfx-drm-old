@@ -52,6 +52,10 @@ $(OBJS_DIR)/%.o:		$(SRC)/common/fs/%.c
 	$(COMPILE.c) -o $@ $<
 	$(CTFCONVERT_O)
 
+$(OBJS_DIR)/%.o:		$(UTSBASE)/common/io/drm/%.c
+	$(COMPILE.c) -o $@ $<
+	$(CTFCONVERT_O)
+
 $(OBJS_DIR)/%.o:		$(UTSBASE)/intel/zfs/%.c
 	$(COMPILE.c) -o $@ $<
 	$(CTFCONVERT_O)
@@ -61,6 +65,10 @@ $(OBJS_DIR)/%.o:		$(UTSBASE)/intel/io/agpgart/%.c
 	$(CTFCONVERT_O)
 
 $(OBJS_DIR)/%.o:		$(UTSBASE)/intel/io/agpmaster/%.c
+	$(COMPILE.c) -o $@ $<
+	$(CTFCONVERT_O)
+
+$(OBJS_DIR)/%.o:		$(UTSBASE)/intel/io/i915/%.c
 	$(COMPILE.c) -o $@ $<
 	$(CTFCONVERT_O)
 
@@ -103,6 +111,9 @@ $(OBJS_DIR)/%.o:	$(SRC)/common/util/$(SUBARCH_DIR)/%.c
 $(LINTS_DIR)/%.ln:		$(SRC)/common/fs/%.c
 	@($(LHEAD) $(LINT.c) $< $(LTAIL))
 
+$(LINTS_DIR)/%.ln:		$(UTSBASE)/common/io/drm/%.c
+	@($(LHEAD) $(LINT.c) $< $(LTAIL))
+
 $(LINTS_DIR)/%.ln:		$(UTSBASE)/intel/zfs/%.c
 	@($(LHEAD) $(LINT.c) $< $(LTAIL))
 
@@ -110,6 +121,9 @@ $(LINTS_DIR)/%.ln:		$(UTSBASE)/intel/io/agpgart/%.c
 	@($(LHEAD) $(LINT.c) $< $(LTAIL))
 
 $(LINTS_DIR)/%.ln:		$(UTSBASE)/intel/io/agpmaster/%.c
+	@($(LHEAD) $(LINT.c) $< $(LTAIL))
+
+$(LINTS_DIR)/%.ln:		$(UTSBASE)/intel/io/i915/%.c
 	@($(LHEAD) $(LINT.c) $< $(LTAIL))
 
 $(OBJS_DIR)/kobj.ln		:= CPPFLAGS += -D_DBOOT
