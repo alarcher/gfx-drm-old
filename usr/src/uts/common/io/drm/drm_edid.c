@@ -1221,7 +1221,7 @@ static void edid_fixup_preferred(struct drm_connector *connector,
 	preferred_mode = list_first_entry(&connector->probed_modes,
 					  struct drm_display_mode, head);
 
-	list_for_each_entry_safe(cur_mode, t, struct drm_display_mode, &connector->probed_modes, head) {
+	list_for_each_entry_safe(cur_mode, t, &connector->probed_modes, head) {
 		cur_mode->type &= ~DRM_MODE_TYPE_PREFERRED;
 
 		if (cur_mode == preferred_mode)
@@ -1494,7 +1494,7 @@ drm_mode_std(struct drm_connector *connector, struct edid *edid,
 	 * instead.  This way we don't have to guess at interlace or
 	 * reduced blanking.
 	 */
-	list_for_each_entry(m, struct drm_display_mode, &connector->probed_modes, head)
+	list_for_each_entry(m, &connector->probed_modes, head)
 		if (m->hdisplay == hsize && m->vdisplay == vsize &&
 		    drm_mode_vrefresh(m) == vrefresh_rate)
 			return NULL;
@@ -1790,7 +1790,7 @@ static bool valid_inferred_mode(const struct drm_connector *connector,
 	struct drm_display_mode *m;
 	bool ok = false;
 
-	list_for_each_entry(m, struct drm_display_mode, &connector->probed_modes, head) {
+	list_for_each_entry(m, &connector->probed_modes, head) {
 		if (mode->hdisplay == m->hdisplay &&
 		    mode->vdisplay == m->vdisplay &&
 		    drm_mode_vrefresh(mode) == drm_mode_vrefresh(m))
@@ -2317,7 +2317,7 @@ add_alternate_cea_modes(struct drm_connector *connector, struct edid *edid)
 	 * Go through all probed modes and create a new mode
 	 * with the alternate clock for certain CEA modes.
 	 */
-	list_for_each_entry(mode, struct drm_display_mode, &connector->probed_modes, head) {
+	list_for_each_entry(mode, &connector->probed_modes, head) {
 		const struct drm_display_mode *cea_mode;
 		struct drm_display_mode *newmode;
 		u8 cea_mode_idx = drm_match_cea_mode(mode) - 1;
@@ -2350,10 +2350,10 @@ add_alternate_cea_modes(struct drm_connector *connector, struct edid *edid)
 		else
 			newmode->clock = clock2;
 
-		list_add_tail(&newmode->head, &list, (caddr_t)newmode);
+		list_add_tail(&newmode->head, &list);
 	}
 
-	list_for_each_entry_safe(mode, tmp, struct drm_display_mode, &list, head) {
+	list_for_each_entry_safe(mode, tmp, &list, head) {
 		list_del(&mode->head);
 		drm_mode_probed_add(connector, mode);
 		modes++;
@@ -2702,7 +2702,7 @@ struct drm_connector *drm_select_eld(struct drm_encoder *encoder,
 	struct drm_connector *connector;
 	struct drm_device *dev = encoder->dev;
 
-	list_for_each_entry(connector, struct drm_connector, &dev->mode_config.connector_list, head)
+	list_for_each_entry(connector, &dev->mode_config.connector_list, head)
 		if (connector->encoder == encoder && connector->eld[0])
 			return connector;
 

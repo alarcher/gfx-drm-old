@@ -71,7 +71,7 @@ struct idr_list {
 	struct idr_list *next, *prev;
 	void *obj;
 	uint32_t	handle;
-	caddr_t	contain_ptr;
+// XXX	caddr_t	contain_ptr;
 };
 
 #define	idr_list_for_each(entry, head) \

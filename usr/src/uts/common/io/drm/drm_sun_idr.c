@@ -30,6 +30,12 @@
 #include "drm_linux_list.h"
 #include "drm_sun_idr.h"
 
+#define	IDR_INIT_LIST_HEAD(head)				\
+do { 								\
+	(head)->next = head;					\
+	(head)->prev = head;					\
+} while (*"\0")
+
 static inline int
 fr_isfull(struct idr_free_id_range *range)
 {
@@ -364,7 +370,7 @@ idr_list_init(struct idr_list  *head)
 			* sizeof (struct idr_list), KM_SLEEP);
 	head->next = entry;
 	for (int i = 0; i < DRM_GEM_OBJIDR_HASHNODE; i++) {
-		INIT_LIST_HEAD(&entry[i]);
+		IDR_INIT_LIST_HEAD(&entry[i]);
 	}
 }
 

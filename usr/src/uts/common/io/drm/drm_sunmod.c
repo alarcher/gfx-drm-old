@@ -314,7 +314,7 @@ drm_gem_map_access(devmap_cookie_t dhp, void *pvt, offset_t offset, size_t len,
 			seg->dhp = dhp;
 			seg->mapoffset = offset;
 			seg->maplen = len;
-			list_add_tail(&seg->head, &obj->seg_list, (caddr_t)seg);
+			list_add_tail(&seg->head, &obj->seg_list);
 			mutex_unlock(&dev->page_fault_lock);
 		}
 	}
@@ -907,7 +907,7 @@ drm_core_findmap(struct drm_device *dev, unsigned int token)
 {
 	struct drm_map_list *_entry;
 
-	list_for_each_entry(_entry, struct drm_map_list, &dev->maplist, head) {
+	list_for_each_entry(_entry, &dev->maplist, head) {
 		if (_entry->user_token == token)
 			return (_entry->map);
 	}

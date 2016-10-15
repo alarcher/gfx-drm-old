@@ -898,7 +898,7 @@ void drm_mode_validate_size(struct drm_device *dev,
 {
 	struct drm_display_mode *mode;
 
-	list_for_each_entry(mode, struct drm_display_mode, mode_list, head) {
+	list_for_each_entry(mode, mode_list, head) {
 		if (maxPitch > 0 && mode->hdisplay > maxPitch)
 			mode->status = MODE_BAD_WIDTH;
 
@@ -934,7 +934,7 @@ void drm_mode_validate_clocks(struct drm_device *dev,
 	struct drm_display_mode *mode;
 	int i;
 
-	list_for_each_entry(mode, struct drm_display_mode, mode_list, head) {
+	list_for_each_entry(mode, mode_list, head) {
 		bool good = false;
 		for (i = 0; i < n_ranges; i++) {
 			if (mode->clock >= min[i] && mode->clock <= max[i]) {
@@ -965,7 +965,7 @@ void drm_mode_prune_invalid(struct drm_device *dev,
 {
 	struct drm_display_mode *mode, *t;
 
-	list_for_each_entry_safe(mode, t, struct drm_display_mode, mode_list, head) {
+	list_for_each_entry_safe(mode, t, mode_list, head) {
 		if (mode->status != MODE_OK) {
 			list_del(&mode->head);
 			if (verbose) {
@@ -1091,12 +1091,10 @@ void drm_mode_connector_list_update(struct drm_connector *connector)
 	struct drm_display_mode *pmode, *pt;
 	int found_it;
 
-	list_for_each_entry_safe(pmode, pt, struct drm_display_mode,
-			         &connector->probed_modes,
-				 head) {
+	list_for_each_entry_safe(pmode, pt, &connector->probed_modes, head) {
 		found_it = 0;
 		/* go through current modes checking for the new probed mode */
-		list_for_each_entry(mode, struct drm_display_mode, &connector->modes, head) {
+		list_for_each_entry(mode, &connector->modes, head) {
 			if (drm_mode_equal(pmode, mode)) {
 				found_it = 1;
 				/* if equal delete the probed mode */

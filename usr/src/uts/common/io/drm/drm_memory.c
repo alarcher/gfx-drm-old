@@ -249,7 +249,7 @@ drm_sun_ioremap(uint64_t paddr, size_t size, uint32_t mode)
 	iomem->size = size;
 
 	INIT_LIST_HEAD(&iomem->head);
-	list_add(&iomem->head, &drm_iomem_list, (caddr_t)iomem);
+	list_add(&iomem->head, &drm_iomem_list);
 
 	return (addr);
 }
@@ -259,7 +259,7 @@ drm_sun_iounmap(void *addr)
 {
 	struct drm_iomem *iomem;
 
-	list_for_each_entry(iomem, struct drm_iomem, &drm_iomem_list, head) {
+	list_for_each_entry(iomem, &drm_iomem_list, head) {
 		if (iomem->addr == addr) {
 			gfxp_unmap_kernel_space(addr, iomem->size);	
 			list_del(&iomem->head);

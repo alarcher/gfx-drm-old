@@ -1,5 +1,3 @@
-/* BEGIN CSTYLED */
-
 /*
  * Copyright (c) 2006, 2013, Oracle and/or its affiliates. All rights reserved.
  */
@@ -42,124 +40,284 @@
 #define	_DRM_LINUX_LIST_H_
 
 #include <sys/types.h>
-#include <sys/param.h>
+// XXX #include <sys/param.h>
+
+#if !defined(NULL)
+#define NULL ((void *)0)
+#endif
+
+#if !defined(offsetof)
+#define	offsetof(s, m)	((size_t)(&(((s *)0)->m)))
+#endif /* !offsetof */
+
+/* linux kernel.h */
+#define container_of(ptr, type, member)	\
+	((type *)((char *)(ptr) - offsetof(type,member)))
+
+/* linux sys/types.h */
 struct list_head {
 	struct list_head *next, *prev;
-	caddr_t contain_ptr;
 };
 
-/* Cheat, assume the list_head is at the start of the struct */
-#define container_of(ptr, type, member)				\
-	((type *)(uintptr_t)((char *)(ptr) - (unsigned long)(&((type *)0)->member)))
+#define	list_entry(ptr, type, member)	container_of(ptr, type, member)
 
-#define	list_entry(ptr, type, member)				\
-	ptr ? ((type *)(uintptr_t)(ptr->contain_ptr)) : NULL
+static __inline__ void
+INIT_LIST_HEAD(struct list_head *head) {
+	(head)->next = head;
+	(head)->prev = head;
+}
 
-#define list_first_entry(ptr, type, member)			\
-	list_entry((ptr)->next, type, member)
+#define LIST_HEAD_INIT(name) { &(name), &(name) }
+
+#define DRM_LIST_HEAD(name) \
+	struct list_head name = LIST_HEAD_INIT(name)
 
 #define	list_empty(head)					\
 	((head)->next == head)
 
-#define	INIT_LIST_HEAD(head)					\
-do { 								\
-	(head)->next = head;					\
-	(head)->prev = head;					\
-	(head)->contain_ptr = NULL;				\
-} while (*"\0")
+static inline void
+__list_add(struct list_head *new, struct list_head *prev, struct list_head *next)
+{
+	next->prev = new;
+	new->next = next;
+	new->prev = prev;
+	prev->next = new;
+}
 
-#define	list_add(ptr, head, entry)				\
-do {								\
-	struct list_head *n_node = (head)->next;		\
-	(ptr)->prev = head;					\
-	(ptr)->next = (head)->next;				\
-	n_node->prev = ptr;					\
-	(head)->next = ptr;					\
-	(ptr)->contain_ptr = entry;				\
-} while (*"\0")
+#define list_add(new, head)	__list_add(new, head, (head)->next)
 
-#define	list_add_tail(ptr, head, entry)				\
-do {								\
-	struct list_head *p_node = (head)->prev;		\
-	(ptr)->prev = (head)->prev;				\
-	(ptr)->next = head;					\
-	p_node->next = ptr;					\
-	(head)->prev = ptr;					\
-	(ptr)->contain_ptr = entry;				\
-} while (*"\0")
+static __inline__ void
+list_add_tail(struct list_head *entry, struct list_head *head) {
+	(entry)->prev = (head)->prev;
+	(entry)->next = head;
+	(head)->prev->next = entry;
+	(head)->prev = entry;
+}
 
-#define	list_del(ptr)						\
-do {								\
-	struct list_head *n_node = (ptr)->next;			\
-	struct list_head *p_node = (ptr)->prev;			\
-	n_node->prev = (ptr)->prev;				\
-	p_node->next = (ptr)->next;				\
-	(ptr)->prev = NULL;					\
-	(ptr)->next = NULL;					\
-} while (*"\0")
+static __inline__ void
+list_del(struct list_head *entry) {
+	(entry)->next->prev = (entry)->prev;
+	(entry)->prev->next = (entry)->next;
+}
 
-#define	list_del_init(ptr)					\
-do {								\
-	list_del(ptr);						\
-	INIT_LIST_HEAD(ptr);					\
-} while (*"\0")
+static inline void list_replace(struct list_head *old,
+				struct list_head *new)
+{
+	new->next = old->next;
+	new->next->prev = new;
+	new->prev = old->prev;
+	new->prev->next = new;
+}
 
-#define	list_move(ptr, head, entry)			\
-do {								\
-	list_del(ptr);						\
-	list_add(ptr, head, entry);			\
-} while (*"\0")
+static inline void list_move(struct list_head *list, struct list_head *head)
+{
+	list_del(list);
+	list_add(list, head);
+}
+
+/* conflict in sys/list.h */
+#define list_move_tail(list, head, entry) \
+	linux_list_move_tail(list, head)
+static inline void linux_list_move_tail(struct list_head *list,
+    struct list_head *head)
+{
+	list_del(list);
+	list_add_tail(list, head);
+}
+
+static __inline__ void
+list_del_init(struct list_head *entry) {
+	(entry)->next->prev = (entry)->prev;
+	(entry)->prev->next = (entry)->next;
+	INIT_LIST_HEAD(entry);
+}
+
+#define	list_for_each(entry, head)				\
+	for (entry = (head)->next; entry != head; entry = (entry)->next)
+
+#define	list_for_each_prev(entry, head) \
+        for (entry = (head)->prev; entry != (head); \
+                entry = entry->prev)
+
+#define	list_for_each_safe(entry, temp, head)			\
+	for (entry = (head)->next, temp = (entry)->next;	\
+	    entry != head; 					\
+	    entry = temp, temp = entry->next)
+
+#define list_for_each_entry(pos, head, member)				\
+	for (pos = list_entry((head)->next, __typeof(*pos), member);	\
+	    &pos->member != (head);					\
+	    pos = list_entry(pos->member.next, __typeof(*pos), member))
+
+#define list_for_each_entry_continue_reverse(pos, head, member)		\
+	for (pos = list_entry(pos->member.prev, __typeof(*pos), member); \
+		&pos->member != (head);    				\
+		pos = list_entry(pos->member.prev, __typeof(*pos), member))
+
+#define list_for_each_entry_safe(pos, n, head, member)			\
+	for (pos = list_entry((head)->next, __typeof(*pos), member),	\
+	    n = list_entry(pos->member.next, __typeof(*pos), member);	\
+	    &pos->member != (head);					\
+	    pos = n, n = list_entry(n->member.next, __typeof(*n), member))
+
+#define list_for_each_entry_safe_from(pos, n, head, member) 			\
+	for (n = list_entry(pos->member.next, __typeof(*pos), member);		\
+	     &pos->member != (head);						\
+	     pos = n, n = list_entry(n->member.next, __typeof(*n), member))
+
+#define list_first_entry(ptr, type, member) \
+	list_entry((ptr)->next, type, member)
 
 
-#define	list_move_tail(ptr, head, entry)			\
-do {								\
-	list_del(ptr);						\
-	list_add_tail(ptr, head, entry);			\
-} while (*"\0")
+static inline void
+__list_splice(const struct list_head *list, struct list_head *prev,
+    struct list_head *next)
+{
+	struct list_head *first = list->next;
+	struct list_head *last = list->prev;
 
-#define	list_splice(list, be, ne)				\
-do {								\
-	if (!list_empty(list)) {				\
-		struct list_head *first = (list)->next;		\
-		struct list_head *last = (list)->prev;		\
-		first->prev = be;				\
-		(be)->next = first;				\
-		last->next = ne;				\
-		(ne)->prev = last;				\
-	}							\
-} while (*"\0")
+	first->prev = prev;
+	prev->next = first;
 
-#define list_replace(old, new)			\
-do {								\
-	struct list_head *old_list = old;			\
-	struct list_head *new_list = new;			\
-	new_list->next = old_list->next;			\
-	new_list->next->prev = new_list;			\
-	new_list->prev = old_list->prev;			\
-	new_list->prev->next = new_list;			\
-} while (*"\0")
+	last->next = next;
+	next->prev = last;
+}
 
-#define	list_for_each(pos, head)				\
-	for (pos = (head)->next; pos != head; pos = (pos)->next)
+static inline void
+list_splice(const struct list_head *list, struct list_head *head)
+{
+	if (list_empty(list))
+		return;
 
-#define	list_for_each_safe(pos, n, head)			\
-	for (pos = (head)->next, n = (pos)->next;		\
-	    pos != head; 					\
-	    pos = n, n = n->next)
+	__list_splice(list, head, head->next);
+}
 
-#define list_for_each_entry(pos, type, head, member)		\
-	for (pos = list_entry((head)->next, type, member); pos; \
-	    pos = list_entry(pos->member.next, type, member))
+void drm_list_sort(void *priv, struct list_head *head, int (*cmp)(void *priv,
+    struct list_head *a, struct list_head *b));
 
-#define list_for_each_entry_safe(pos, n, type, head, member)	\
-	for (pos = list_entry((head)->next, type, member),	\
-	    n = pos ? list_entry(pos->member.next, type, member) : pos;	\
-	    pos;						\
-	    pos = n,						\
-	    n = list_entry((n ? n->member.next : (head)->next), type, member))
+/* hlist, copied from sys/dev/ofed/linux/list.h */
 
-#define list_for_each_entry_continue_reverse(pos, type, head, member)	\
-	for (pos = list_entry(pos->member.prev, type, member);		\
-		pos;							\
-		pos = list_entry(pos->member.prev, type, member))
+/* linux sys/types.h */
+struct hlist_head {
+	struct hlist_node *first;
+};
+
+struct hlist_node {
+	struct hlist_node *next, **pprev;
+};
+
+#define	HLIST_HEAD_INIT { }
+#define	HLIST_HEAD(name) struct hlist_head name = HLIST_HEAD_INIT
+#define	INIT_HLIST_HEAD(head) (head)->first = NULL
+static __inline__ void
+INIT_HLIST_NODE(struct hlist_node *node) {
+	(node)->next = NULL;
+	(node)->pprev = NULL;
+}
+
+static inline int
+hlist_unhashed(const struct hlist_node *h)
+{
+
+	return !h->pprev;
+}
+
+static inline int
+hlist_empty(const struct hlist_head *h)
+{
+
+	return !h->first;
+}
+
+static inline void
+hlist_del(struct hlist_node *n)
+{
+
+        if (n->next)
+                n->next->pprev = n->pprev;
+        *n->pprev = n->next;
+}
+
+static inline void
+hlist_del_init(struct hlist_node *n)
+{
+
+	if (hlist_unhashed(n))
+		return;
+	hlist_del(n);
+	INIT_HLIST_NODE(n);
+}
+
+static inline void
+hlist_add_head(struct hlist_node *n, struct hlist_head *h)
+{
+
+	n->next = h->first;
+	if (h->first)
+		h->first->pprev = &n->next;
+	h->first = n;
+	n->pprev = &h->first;
+}
+
+static inline void
+hlist_add_before(struct hlist_node *n, struct hlist_node *next)
+{
+
+	n->pprev = next->pprev;
+	n->next = next;
+	next->pprev = &n->next;
+	*(n->pprev) = n;
+}
+ 
+static inline void
+hlist_add_after(struct hlist_node *n, struct hlist_node *next)
+{
+
+	next->next = n->next;
+	n->next = next;
+	next->pprev = &n->next;
+	if (next->next)
+		next->next->pprev = &next->next;
+}
+ 
+static inline void
+hlist_move_list(struct hlist_head *old, struct hlist_head *new)
+{
+
+	new->first = old->first;
+	if (new->first)
+		new->first->pprev = &new->first;
+	old->first = NULL;
+}
+
+#define	hlist_entry(ptr, type, field)	container_of(ptr, type, field)
+
+#define	hlist_for_each(p, head)					\
+	for (p = (head)->first; p; p = p->next)
+
+/* Modified to avoid ({...}) */
+#define	hlist_for_each_safe(p, n, head)				\
+	for (p = (head)->first, n = p ? p->next : NULL;		\
+	    p != NULL;						\
+	    p = n, n = p ? p->next : NULL)
+
+#define hlist_for_each_entry(tp, p, head, field)		\
+	for (p = (head)->first;					\
+	    p && (tp = hlist_entry(p, __typeof(*tp), field));	\
+	    p = p->next)
+
+#define hlist_for_each_entry_continue(tp, p, field)		\
+	for (p = (p)->next;					\
+	    p && (tp = hlist_entry(p, typeof(*tp), field));	\
+	    p = p->next)
+
+#define	hlist_for_each_entry_from(tp, p, field)				\
+	for (; p ? (tp = hlist_entry(p, typeof(*tp), field)): NULL; p = p->next)
+
+/* Modified to avoid ({...}) */
+#define hlist_for_each_entry_safe(tpos, pos, n, head, member)		\
+	for (pos = (head)->first, n = (pos) ? pos->next : NULL;		\
+	     pos && (tpos = hlist_entry(pos, typeof(*tpos), member));	\
+	     pos = n, n = (pos) ? pos->next : NULL)
+
 #endif /* _DRM_LINUX_LIST_H_ */

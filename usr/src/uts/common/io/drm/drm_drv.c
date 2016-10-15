@@ -182,7 +182,7 @@ int drm_lastclose(struct drm_device * dev)
 
 		/* Remove AGP resources, but leave dev->agp
 		   intact until drv_cleanup is called. */
-		list_for_each_entry_safe(entry, tempe, struct drm_agp_mem, &dev->agp->memory, head) {
+		list_for_each_entry_safe(entry, tempe, &dev->agp->memory, head) {
 			if (entry->bound)
 				(void) drm_agp_unbind_memory(entry->handle, dev);
 			kfree(entry, sizeof (*entry));
@@ -465,7 +465,7 @@ struct drm_local_map *drm_getsarea(struct drm_device *dev)
 {
 	struct drm_map_list *entry;
 
-	list_for_each_entry(entry, struct drm_map_list, &dev->maplist, head) {
+	list_for_each_entry(entry, &dev->maplist, head) {
 		if (entry->map && entry->map->type == _DRM_SHM &&
 		    (entry->map->flags & _DRM_CONTAINS_LOCK)) {
 			return entry->map;

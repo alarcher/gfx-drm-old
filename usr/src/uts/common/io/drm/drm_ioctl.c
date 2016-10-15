@@ -188,7 +188,7 @@ int drm_getclient(DRM_IOCTL_ARGS)
 	i = 0;
 
 	mutex_lock(&dev->struct_mutex);
-	list_for_each_entry(pt, struct drm_file, &dev->filelist, lhead){
+	list_for_each_entry(pt, &dev->filelist, lhead){
 		if (i++ >= idx) {
 			client->auth = pt->authenticated;
 			client->pid = pt->pid;

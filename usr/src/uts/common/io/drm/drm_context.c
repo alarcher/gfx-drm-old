@@ -165,7 +165,7 @@ int drm_getsareactx(DRM_IOCTL_ARGS)
 	}
 
 	request->handle = NULL;
-	list_for_each_entry(_entry, struct drm_map_list, &dev->maplist, head) {
+	list_for_each_entry(_entry, &dev->maplist, head) {
 		if (_entry->map == map) {
 			request->handle =
 			    (void *)(unsigned long)_entry->user_token;
@@ -201,7 +201,7 @@ int drm_setsareactx(DRM_IOCTL_ARGS)
 	struct drm_map_list *r_list = NULL;
 
 	mutex_lock(&dev->struct_mutex);
-	list_for_each_entry(r_list, struct drm_map_list, &dev->maplist, head) {
+	list_for_each_entry(r_list, &dev->maplist, head) {
 		if (r_list->map
 		    && r_list->user_token == (unsigned long) request->handle)
 			goto found;
@@ -356,7 +356,7 @@ int drm_addctx(DRM_IOCTL_ARGS)
 	ctx_entry->tag = file;
 
 	mutex_lock(&dev->ctxlist_mutex);
-	list_add(&ctx_entry->head, &dev->ctxlist, (caddr_t)ctx_entry);
+	list_add(&ctx_entry->head, &dev->ctxlist);
 	++dev->ctx_count;
 	mutex_unlock(&dev->ctxlist_mutex);
 
@@ -459,7 +459,7 @@ int drm_rmctx(DRM_IOCTL_ARGS)
 	if (!list_empty(&dev->ctxlist)) {
 		struct drm_ctx_list *pos, *n;
 
-		list_for_each_entry_safe(pos, n, struct drm_ctx_list, &dev->ctxlist, head) {
+		list_for_each_entry_safe(pos, n, &dev->ctxlist, head) {
 			if (pos->handle == ctx->handle) {
 				list_del(&pos->head);
 				kfree(pos, sizeof (*pos));

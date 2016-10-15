@@ -261,7 +261,7 @@ int drm_agp_alloc(struct drm_device *dev, struct drm_agp_buffer *request)
 	entry->handle = alloc.agpa_key + DRM_AGP_KEY_OFFSET;
 	entry->bound = 0;
 	entry->pages = (int) pages;
-	list_add(&entry->head, &dev->agp->memory, (caddr_t)entry);
+	list_add(&entry->head, &dev->agp->memory);
 
 	request->handle = entry->handle;
 	request->physical = alloc.agpa_physical;
@@ -291,7 +291,7 @@ static struct drm_agp_mem *drm_agp_lookup_entry(struct drm_device * dev,
 {
 	struct drm_agp_mem *entry;
 
-	list_for_each_entry(entry, struct drm_agp_mem, &dev->agp->memory, head) {
+	list_for_each_entry(entry, &dev->agp->memory, head) {
 		if (entry->handle == handle)
 			return entry;
 	}

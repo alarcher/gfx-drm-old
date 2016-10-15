@@ -81,7 +81,7 @@ int drm_fb_helper_single_add_all_connectors(struct drm_fb_helper *fb_helper)
 	struct drm_connector *connector;
 	int i;
 
-	list_for_each_entry(connector, struct drm_connector, &dev->mode_config.connector_list, head) {
+	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
 		struct drm_fb_helper_connector *fb_helper_connector;
 
 		fb_helper_connector = kzalloc(sizeof(struct drm_fb_helper_connector), GFP_KERNEL);
@@ -162,7 +162,7 @@ static struct drm_framebuffer *drm_mode_config_fb(struct drm_crtc *crtc)
 	struct drm_device *dev = crtc->dev;
 	struct drm_crtc *c;
 
-	list_for_each_entry(c, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(c, &dev->mode_config.crtc_list, head) {
 		if (crtc->base.id == c->base.id)
 			return c->fb;
 	}
@@ -182,7 +182,7 @@ bool drm_fb_helper_restore_fbdev_mode(struct drm_fb_helper *fb_helper)
 
 	dev = fb_helper->dev;
 
-	list_for_each_entry(plane, struct drm_plane, &dev->mode_config.plane_list, head)
+	list_for_each_entry(plane, &dev->mode_config.plane_list, head)
 		drm_plane_force_disable(plane);
 
 	for (i = 0; i < fb_helper->crtc_count; i++) {
@@ -211,7 +211,7 @@ bool drm_fb_helper_force_kernel_mode(void)
 	if (list_empty(&kernel_fb_helper_list))
 		return false;
 
-	list_for_each_entry(helper, struct drm_fb_helper, &kernel_fb_helper_list, kernel_fb_list) {
+	list_for_each_entry(helper, &kernel_fb_helper_list, kernel_fb_list) {
 		if (helper->dev->switch_power_state == DRM_SWITCH_POWER_OFF)
 			continue;
 
@@ -228,7 +228,7 @@ static bool drm_fb_helper_is_bound(struct drm_fb_helper *fb_helper)
 	struct drm_crtc *crtc;
 	int bound = 0, crtcs_bound = 0;
 
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		if (crtc->fb)
 			crtcs_bound++;
 		if (crtc->fb == fb_helper->fb)
@@ -293,7 +293,7 @@ int drm_fb_helper_init(struct drm_device *dev,
 	}
 
 	i = 0;
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		fb_helper->crtc_info[i].mode_set.crtc = crtc;
 		i++;
 	}
@@ -419,7 +419,7 @@ int drm_fb_helper_single_fb_probe(struct drm_fb_helper *fb_helper,
 		DRM_INFO("registered panic notifier");
 	}
 
-	list_add(&fb_helper->kernel_fb_list, &kernel_fb_helper_list, (caddr_t)fb_helper);
+	list_add(&fb_helper->kernel_fb_list, &kernel_fb_helper_list);
 
 	return 0;
 }
@@ -444,7 +444,7 @@ static struct drm_display_mode *drm_has_preferred_mode(struct drm_fb_helper_conn
 {
 	struct drm_display_mode *mode;
 
-	list_for_each_entry(mode, struct drm_display_mode, &fb_connector->connector->modes, head) {
+	list_for_each_entry(mode, &fb_connector->connector->modes, head) {
 		if (drm_mode_width(mode) > width ||
 		    drm_mode_height(mode) > height)
 			continue;
@@ -478,7 +478,7 @@ static struct drm_display_mode *drm_pick_cmdline_mode(struct drm_fb_helper_conne
 	if (cmdline_mode->rb || cmdline_mode->margins)
 		goto create_mode;
 
-	list_for_each_entry(mode, struct drm_display_mode, &fb_helper_conn->connector->modes, head) {
+	list_for_each_entry(mode, &fb_helper_conn->connector->modes, head) {
 		/* check width/height */
 		if (mode->hdisplay != cmdline_mode->xres ||
 		    mode->vdisplay != cmdline_mode->yres)
@@ -500,8 +500,7 @@ create_mode:
 	mode = drm_mode_create_from_cmdline_mode(fb_helper_conn->connector->dev,
 						 cmdline_mode);
 	if (mode)
-		list_add(&mode->head, &fb_helper_conn->connector->modes,
-		    (caddr_t)mode);
+		list_add(&mode->head, &fb_helper_conn->connector->modes);
 	return mode;
 }
 
@@ -598,7 +597,7 @@ static bool drm_target_cloned(struct drm_fb_helper *fb_helper,
 			continue;
 
 		fb_helper_conn = fb_helper->connector_info[i];
-		list_for_each_entry(mode, struct drm_display_mode, &fb_helper_conn->connector->modes, head) {
+		list_for_each_entry(mode, &fb_helper_conn->connector->modes, head) {
 			if (drm_mode_equal(mode, dmt_mode))
 				modes[i] = mode;
 		}
@@ -639,7 +638,7 @@ static bool drm_target_preferred(struct drm_fb_helper *fb_helper,
 		}
 		/* No preferred modes, pick one off the list */
 		if (!modes[i] && !list_empty(&fb_helper_conn->connector->modes)) {
-			list_for_each_entry(modes[i], struct drm_display_mode, &fb_helper_conn->connector->modes, head)
+			list_for_each_entry(modes[i], &fb_helper_conn->connector->modes, head)
 				/* LINTED */
 				{ if (1) break; }
 		}

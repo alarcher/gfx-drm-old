@@ -58,7 +58,7 @@ static struct drm_map_list *drm_find_matching_map(struct drm_device *dev,
 						  struct drm_local_map *map)
 {
 	struct drm_map_list *entry;
-	list_for_each_entry(entry, struct drm_map_list, &dev->maplist, head) {
+	list_for_each_entry(entry, &dev->maplist, head) {
 		/*
 		 * Because the kernel-userspace ABI is fixed at a 32-bit offset
 		 * while PCI resources may live above that, we ignore the map
@@ -288,7 +288,7 @@ static int drm_addmap_core(struct drm_device *dev, unsigned long offset,
 	list->map = map;
 
 	mutex_lock(&dev->struct_mutex);
-	list_add(&list->head, &dev->maplist, (caddr_t)list);
+	list_add(&list->head, &dev->maplist);
 
 	/* Assign a 32-bit handle */
 	/* We do it here so that dev->struct_mutex protects the increment */
@@ -377,7 +377,7 @@ int drm_rmmap_locked(struct drm_device *dev, struct drm_local_map *map)
 	struct drm_master *master;
 
 	/* Find the list entry for the map and remove it */
-	list_for_each_entry_safe(r_list, list_t, struct drm_map_list, &dev->maplist, head) {
+	list_for_each_entry_safe(r_list, list_t, &dev->maplist, head) {
 		if (r_list->map == map) {
 			master = r_list->master;
 			list_del(&r_list->head);
@@ -454,7 +454,7 @@ int drm_rmmap_ioctl(DRM_IOCTL_ARGS)
 	int ret;
 
 	mutex_lock(&dev->struct_mutex);
-	list_for_each_entry(r_list, struct drm_map_list, &dev->maplist, head) {
+	list_for_each_entry(r_list, &dev->maplist, head) {
 		if (r_list->map &&
 		    r_list->user_token == (unsigned long)request->handle &&
 		    r_list->map->flags & _DRM_REMOVABLE) {

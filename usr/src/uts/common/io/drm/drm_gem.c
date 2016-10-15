@@ -322,7 +322,7 @@ drm_gem_object_init(struct drm_device *dev, struct drm_gem_object *obj,
 	if (MDB_TRACK_ENABLE) {
 		INIT_LIST_HEAD(&obj->track_list);
 		spin_lock(&dev->track_lock);
-		list_add_tail(&obj->track_list, &dev->gem_objects_list, (caddr_t)obj);
+		list_add_tail(&obj->track_list, &dev->gem_objects_list);
 		spin_unlock(&dev->track_lock);
 
 		INIT_LIST_HEAD(&obj->his_list);
@@ -669,7 +669,7 @@ drm_gem_object_release(struct drm_gem_object *obj)
 		spin_unlock(&dev->track_lock);
 
 		struct drm_history_list *r_list, *list_temp;
-		list_for_each_entry_safe(r_list, list_temp, struct drm_history_list, &obj->his_list, head) {
+		list_for_each_entry_safe(r_list, list_temp, &obj->his_list, head) {
 			list_del(&r_list->head);
 			drm_free(r_list, sizeof (struct drm_history_list), DRM_MEM_MAPS);
 		}
@@ -802,6 +802,6 @@ drm_gem_object_track(struct drm_gem_object *obj, const char *name,
 		list->cur_seq = cur_seq;
 		list->last_seq = last_seq;
 		list->ring_ptr = ptr;
-		list_add_tail(&list->head, &obj->his_list, (caddr_t)list);
+		list_add_tail(&list->head, &obj->his_list);
 	}
 }

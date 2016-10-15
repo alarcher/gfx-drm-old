@@ -971,7 +971,7 @@ static void send_vblank_event(struct drm_device *dev,
 	e->event.tv_sec = now->tv_sec;
 	e->event.tv_usec = now->tv_usec;
 
-	list_add_tail(&e->base.link, &e->base.file_priv->event_list, (caddr_t)&e->base);
+	list_add_tail(&e->base.link, &e->base.file_priv->event_list);
 	DRM_WAKEUP(&e->base.file_priv->event_wait);	
 }
 
@@ -1146,8 +1146,7 @@ void drm_vblank_off(struct drm_device *dev, int crtc)
 	seq = drm_vblank_count_and_time(dev, crtc, &now);
 
 	spin_lock(&dev->event_lock);
-	list_for_each_entry_safe(e, t, struct drm_pending_vblank_event, 
-					&dev->vblank_event_list, base.link) {
+	list_for_each_entry_safe(e, t, &dev->vblank_event_list, base.link) {
 		if (e->pipe != crtc)
 			continue;
 		DRM_DEBUG("Sending premature vblank event on disable: \
@@ -1305,7 +1304,7 @@ static int drm_queue_vblank_event(struct drm_device *dev, int pipe,
 		vblwait->reply.sequence = seq;
 	} else {
 		/* drm_handle_vblank_events will call drm_vblank_put */
-		list_add_tail(&e->base.link, &dev->vblank_event_list, (caddr_t)&e->base);
+		list_add_tail(&e->base.link, &dev->vblank_event_list);
 		vblwait->reply.sequence = vblwait->request.sequence;
 	}
 
@@ -1434,8 +1433,7 @@ static void drm_handle_vblank_events(struct drm_device *dev, int crtc)
 
 	spin_lock_irqsave(&dev->event_lock, flags);
 
-	list_for_each_entry_safe(e, t, struct drm_pending_vblank_event,
-				&dev->vblank_event_list, base.link) {
+	list_for_each_entry_safe(e, t, &dev->vblank_event_list, base.link) {
 		if (e->pipe != crtc)
 			continue;
 		if ((seq - e->event.sequence) > (1<<23))

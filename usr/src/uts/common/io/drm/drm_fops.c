@@ -260,7 +260,7 @@ static int drm_open_helper(struct drm_minor *minor,
 	}
 
 	mutex_lock(&dev->struct_mutex);
-	list_add(&priv->lhead, &dev->filelist, (caddr_t)priv);
+	list_add(&priv->lhead, &dev->filelist);
 	mutex_unlock(&dev->struct_mutex);
 
 	return 0;
@@ -292,7 +292,7 @@ static void drm_events_release(struct drm_file *file_priv)
 	spin_lock_irqsave(&dev->event_lock, flags);
 
 	/* Remove pending flips */
-	list_for_each_entry_safe(v, vt, struct drm_pending_vblank_event, &dev->vblank_event_list, base.link)
+	list_for_each_entry_safe(v, vt, &dev->vblank_event_list, base.link)
 	if (v->base.file_priv == file_priv) {
 		list_del(&v->base.link);
 		drm_vblank_put(dev, v->pipe);
@@ -300,7 +300,7 @@ static void drm_events_release(struct drm_file *file_priv)
 	}
 
 	/* Remove unconsumed events */
-	list_for_each_entry_safe(e, et, struct drm_pending_event, &file_priv->event_list, link)
+	list_for_each_entry_safe(e, et, &file_priv->event_list, link)
 		e->destroy(e,  sizeof(struct drm_pending_vblank_event));
 
 	spin_unlock_irqrestore(&dev->event_lock, flags);
@@ -357,7 +357,7 @@ drm_release(struct drm_file *file_priv)
 	if (!list_empty(&dev->ctxlist)) {
 		struct drm_ctx_list *pos, *n;
 
-		list_for_each_entry_safe(pos, n, struct drm_ctx_list, &dev->ctxlist, head) {
+		list_for_each_entry_safe(pos, n, &dev->ctxlist, head) {
 			if (pos->tag == file_priv &&
 			    pos->handle != DRM_KERNEL_CONTEXT) {
 				if (dev->driver->context_dtor)
@@ -379,7 +379,7 @@ drm_release(struct drm_file *file_priv)
 	if (file_priv->is_master) {
 		struct drm_master *master = file_priv->master;
 		struct drm_file *temp;
-		list_for_each_entry(temp, struct drm_file, &dev->filelist, lhead) {
+		list_for_each_entry(temp, &dev->filelist, lhead) {
 			if ((temp->master == file_priv->master) &&
 			    (temp != file_priv))
 				temp->authenticated = 0;

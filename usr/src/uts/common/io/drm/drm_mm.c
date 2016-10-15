@@ -96,7 +96,7 @@ int drm_mm_pre_get(struct drm_mm *mm)
 			return ret;
 		}
 		++mm->num_unused;
-		list_add_tail(&node->node_list, &mm->unused_nodes, (caddr_t)node);
+		list_add_tail(&node->node_list, &mm->unused_nodes);
 	}
 	spin_unlock(&mm->unused_lock);
 	return 0;
@@ -136,13 +136,13 @@ static void drm_mm_insert_helper(struct drm_mm_node *hole_node,
 	node->allocated = 1;
 
 	INIT_LIST_HEAD(&node->hole_stack);
-	list_add(&node->node_list, &hole_node->node_list, (caddr_t)node);
+	list_add(&node->node_list, &hole_node->node_list);
 
 	BUG_ON(node->start + node->size > adj_end);
 
 	node->hole_follows = 0;
 	if (__drm_mm_hole_node_start(node) < hole_end) {
-		list_add(&node->hole_stack, &mm->hole_stack, (caddr_t)node);
+		list_add(&node->hole_stack, &mm->hole_stack);
 		node->hole_follows = 1;
 	}
 }
@@ -171,7 +171,7 @@ struct drm_mm_node *drm_mm_create_block(struct drm_mm *mm,
 		node->allocated = 1;
 
 		INIT_LIST_HEAD(&node->hole_stack);
-		list_add(&node->node_list, &hole->node_list, (caddr_t)node);
+		list_add(&node->node_list, &hole->node_list);
 
 		if (start == hole_start) {
 			hole->hole_follows = 0;
@@ -180,7 +180,7 @@ struct drm_mm_node *drm_mm_create_block(struct drm_mm *mm,
 
 		node->hole_follows = 0;
 		if (end != hole_end) {
-			list_add(&node->hole_stack, &mm->hole_stack, (caddr_t)node);
+			list_add(&node->hole_stack, &mm->hole_stack);
 			node->hole_follows = 1;
 		}
 
@@ -274,14 +274,14 @@ static void drm_mm_insert_helper_range(struct drm_mm_node *hole_node,
 	node->allocated = 1;
 
 	INIT_LIST_HEAD(&node->hole_stack);
-	list_add(&node->node_list, &hole_node->node_list, (caddr_t)node);
+	list_add(&node->node_list, &hole_node->node_list);
 
 	BUG_ON(node->start + node->size > adj_end);
 	BUG_ON(node->start + node->size > end);
 
 	node->hole_follows = 0;
 	if (__drm_mm_hole_node_start(node) < hole_end) {
-		list_add(&node->hole_stack, &mm->hole_stack, (caddr_t)node);
+		list_add(&node->hole_stack, &mm->hole_stack);
 		node->hole_follows = 1;
 	}
 }
@@ -362,9 +362,9 @@ void drm_mm_remove_node(struct drm_mm_node *node)
 
 	if (!prev_node->hole_follows) {
 		prev_node->hole_follows = 1;
-		list_add(&prev_node->hole_stack, &mm->hole_stack, (caddr_t)prev_node);
+		list_add(&prev_node->hole_stack, &mm->hole_stack);
 	} else
-		list_move(&prev_node->hole_stack, &mm->hole_stack, (caddr_t)prev_node);
+		list_move(&prev_node->hole_stack, &mm->hole_stack);
 
 	list_del(&node->node_list);
 	node->allocated = 0;
@@ -384,7 +384,7 @@ void drm_mm_put_block(struct drm_mm_node *node)
 
 	spin_lock(&mm->unused_lock);
 	if (mm->num_unused < MM_UNUSED_TARGET) {
-		list_add(&node->node_list, &mm->unused_nodes, (caddr_t)node);
+		list_add(&node->node_list, &mm->unused_nodes);
 		++mm->num_unused;
 	} else
 		kfree(node, sizeof(struct drm_mm_node));
@@ -640,7 +640,7 @@ int drm_mm_scan_remove_block(struct drm_mm_node *node)
 			       node_list);
 
 	prev_node->hole_follows = node->scanned_preceeds_hole;
-	list_add(&node->node_list, &prev_node->node_list, (caddr_t)node);
+	list_add(&node->node_list, &prev_node->node_list);
 
 	 return (drm_mm_hole_node_end(node) > mm->scan_hit_start &&
 		 node->start < mm->scan_hit_end);
@@ -673,8 +673,8 @@ void drm_mm_init(struct drm_mm * mm, unsigned long start, unsigned long size)
 	mm->head_node.mm = mm;
 	mm->head_node.start = start + size;
 	mm->head_node.size = start - mm->head_node.start;
-	mm->head_node.node_list.contain_ptr = (caddr_t)&mm->head_node;
-	list_add_tail(&mm->head_node.hole_stack, &mm->hole_stack, (caddr_t)&mm->head_node);
+	// XXX mm->head_node.node_list.contain_ptr = (caddr_t)&mm->head_node;
+	list_add_tail(&mm->head_node.hole_stack, &mm->hole_stack);
 	mm->color_adjust = NULL;
 }
 
@@ -689,7 +689,7 @@ void drm_mm_takedown(struct drm_mm * mm)
 	}
 
 	spin_lock(&mm->unused_lock);
-	list_for_each_entry_safe(entry, next, struct drm_mm_node, &mm->unused_nodes, node_list) {
+	list_for_each_entry_safe(entry, next, &mm->unused_nodes, node_list) {
 		list_del(&entry->node_list);
 		kfree(entry, sizeof(struct drm_mm_node));
 		--mm->num_unused;
@@ -724,7 +724,7 @@ void drm_mm_debug_table(struct drm_mm *mm, const char *prefix)
 
 	total_free += drm_mm_debug_hole(&mm->head_node, prefix);
 
-	drm_mm_for_each_node(entry, struct drm_mm_node, mm) {
+	drm_mm_for_each_node(entry, mm) {
 		DRM_DEBUG("%s 0x%08lx-0x%08lx: %8lu: used\n",
 			prefix, entry->start, entry->start + entry->size,
 			entry->size);

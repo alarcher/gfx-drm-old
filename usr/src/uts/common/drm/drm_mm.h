@@ -96,7 +96,7 @@ extern unsigned long __drm_mm_hole_node_start(struct drm_mm_node *hole_node);
 extern unsigned long drm_mm_hole_node_start(struct drm_mm_node *hole_node);
 extern unsigned long __drm_mm_hole_node_end(struct drm_mm_node *hole_node);
 extern unsigned long drm_mm_hole_node_end(struct drm_mm_node *hole_node);
-#define drm_mm_for_each_node(entry, type, mm) list_for_each_entry(entry, type, \
+#define drm_mm_for_each_node(entry, mm) list_for_each_entry(entry, \
 						&(mm)->head_node.node_list, \
 						node_list)
 #define drm_mm_for_each_scanned_node_reverse(entry, n, mm) \

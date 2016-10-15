@@ -115,7 +115,7 @@ struct drm_master *drm_master_create(struct drm_minor *minor)
 
 	master->minor = minor;
 
-	list_add_tail(&master->head, &minor->master_list, (caddr_t)master);
+	list_add_tail(&master->head, &minor->master_list);
 
 	return master;
 }
@@ -139,7 +139,7 @@ void drm_master_destroy(struct kref *kref)
 	if (dev->driver->master_destroy)
 		dev->driver->master_destroy(dev, master);
 
-	list_for_each_entry_safe(r_list, list_temp, struct drm_map_list, &dev->maplist, head) {
+	list_for_each_entry_safe(r_list, list_temp, &dev->maplist, head) {
 		if (r_list->master == master) {
 			(void) drm_rmmap_locked(dev, r_list->map);
 			r_list = NULL;
@@ -501,7 +501,7 @@ void drm_put_dev(struct drm_device *dev)
 
 	drm_vblank_cleanup(dev);
 
-	list_for_each_entry_safe(r_list, list_temp, struct drm_map_list, &dev->maplist, head)
+	list_for_each_entry_safe(r_list, list_temp, &dev->maplist, head)
 		(void) drm_rmmap(dev, r_list->map);
 	idr_destroy(&dev->map_idr);
 
