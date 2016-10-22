@@ -197,11 +197,6 @@ PKGDEP_TOKENS= $(PKGDEP_TOKENS_$(PKGMACH))
 # dependency types, so that they can be included by either an
 # incorporation or a group package.
 #
-$(PDIR)/on-skel-redist.mog := PKGDEP_TYPE= require
-$(PDIR)/on-skel-incorp.mog:= PKGDEP_TYPE= incorporate
-
-PKGDEP_INCORP= \
-	depend fmri=consolidation/on-skel/os-skel-incorporation type=require
 
 #
 # All packaging build products should go into $(PDIR), so they don't
@@ -226,7 +221,7 @@ PROC_PKGS= $(PKGS:%=$(PDIR)/%.mog)
 # build rules and dependencies.  The synthetic and real packages use
 # different sets of transforms and macros for pkgmogrify.
 #
-SYNTH_PKGS= on-skel-incorp on-skel-redist
+SYNTH_PKGS=
 DEP_SYNTH_PKGS= $(SYNTH_PKGS:%=$(PDIR)/%.dep)
 PROC_SYNTH_PKGS= $(SYNTH_PKGS:%=$(PDIR)/%.mog)
 

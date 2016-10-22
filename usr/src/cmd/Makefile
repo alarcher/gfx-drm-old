@@ -42,9 +42,7 @@ include ../Makefile.master
 
 FIRST_SUBDIRS=
 
-COMMON_SUBDIRS=		\
-	foo \
-	fs.d
+COMMON_SUBDIRS=
 
 i386_SUBDIRS=
 
@@ -54,8 +52,7 @@ sparc_SUBDIRS=
 # Commands that are messaged.  Note that 'lp' and 'man' come first
 # (see previous comment about 'lp' and 'man').
 #
-MSGSUBDIRS=		\
-	foo
+MSGSUBDIRS=
 
 sparc_MSGSUBDIRS=
 

@@ -29,9 +29,9 @@
 #
 <include global_zone_only_component>
 set name=pkg.fmri value=pkg:/driver/graphics/drm@$(PKGVERS)
-set name=pkg.summary value="DRM Kernel Drivers"
 set name=pkg.description \
     value="Direct Rendering Manager kernel drivers and modules.  Currently supports Intel(R) integrated graphics devices with hardware acceleration, video memory management, Graphics Execution Manager (GEM), and kernel modesetting (KMS)."
+set name=pkg.summary value="DRM Kernel Drivers"
 set name=info.classification \
     value=org.opensolaris.category.2008:Drivers/Display
 set name=info.upstream value="Direct Rendering Infrastructure (DRI) project"
@@ -40,13 +40,18 @@ set name=variant.arch value=i386
 dir path=kernel group=sys
 dir path=kernel/drv group=sys
 dir path=kernel/drv/$(ARCH64) group=sys
+dir path=kernel/kmdb group=sys
+dir path=kernel/kmdb/$(ARCH64) group=sys
 dir path=kernel/misc group=sys
 dir path=kernel/misc/$(ARCH64) group=sys
+dir path=usr/lib
+dir path=usr/lib/mdb
+dir path=usr/lib/mdb/kvm
+dir path=usr/lib/mdb/kvm/$(ARCH64)
+dir path=usr/share
 dir path=usr/share/man
 dir path=usr/share/man/man7d
 driver name=i915 perms="* 0644 root sys" \
-    alias=pci8086,42 \
-    alias=pci8086,46 \
     alias=pci8086,102 \
     alias=pci8086,106 \
     alias=pci8086,10a \
@@ -60,6 +65,29 @@ driver name=i915 perms="* 0644 root sys" \
     alias=pci8086,162 \
     alias=pci8086,166 \
     alias=pci8086,16a \
+    alias=pci8086,2562 \
+    alias=pci8086,2572 \
+    alias=pci8086,2582 \
+    alias=pci8086,2592 \
+    alias=pci8086,2772 \
+    alias=pci8086,27a2 \
+    alias=pci8086,27ae \
+    alias=pci8086,2972 \
+    alias=pci8086,2982 \
+    alias=pci8086,2992 \
+    alias=pci8086,29a2 \
+    alias=pci8086,29b2 \
+    alias=pci8086,29c2 \
+    alias=pci8086,29d2 \
+    alias=pci8086,2a02 \
+    alias=pci8086,2a12 \
+    alias=pci8086,2a42 \
+    alias=pci8086,2e02.8086.2e02 \
+    alias=pci8086,2e12 \
+    alias=pci8086,2e22 \
+    alias=pci8086,2e32 \
+    alias=pci8086,2e42 \
+    alias=pci8086,3582 \
     alias=pci8086,402 \
     alias=pci8086,406 \
     alias=pci8086,40a \
@@ -70,11 +98,15 @@ driver name=i915 perms="* 0644 root sys" \
     alias=pci8086,41a \
     alias=pci8086,41b \
     alias=pci8086,41e \
+    alias=pci8086,42 \
     alias=pci8086,422 \
     alias=pci8086,426 \
     alias=pci8086,42a \
     alias=pci8086,42b \
     alias=pci8086,42e \
+    alias=pci8086,46 \
+    alias=pci8086,a001 \
+    alias=pci8086,a011 \
     alias=pci8086,a02 \
     alias=pci8086,a06 \
     alias=pci8086,a0a \
@@ -119,41 +151,19 @@ driver name=i915 perms="* 0644 root sys" \
     alias=pci8086,d26 \
     alias=pci8086,d2a \
     alias=pci8086,d2b \
-    alias=pci8086,d2e \
-    alias=pci8086,2562 \
-    alias=pci8086,2572 \
-    alias=pci8086,2582 \
-    alias=pci8086,2592 \
-    alias=pci8086,2772 \
-    alias=pci8086,27a2 \
-    alias=pci8086,27ae \
-    alias=pci8086,2972 \
-    alias=pci8086,2982 \
-    alias=pci8086,2992 \
-    alias=pci8086,29a2 \
-    alias=pci8086,29b2 \
-    alias=pci8086,29c2 \
-    alias=pci8086,29d2 \
-    alias=pci8086,2a02 \
-    alias=pci8086,2a12 \
-    alias=pci8086,2a42 \
-    alias=pci8086,2e02.8086.2e02 \
-    alias=pci8086,2e12 \
-    alias=pci8086,2e22 \
-    alias=pci8086,2e32 \
-    alias=pci8086,2e42 \
-    alias=pci8086,3582 \
-    alias=pci8086,a001 \
-    alias=pci8086,a011
+    alias=pci8086,d2e
 file path=kernel/drv/$(ARCH64)/i915 group=sys
 file path=kernel/drv/i915 group=sys
-file path=kernel/kmdb/$(ARCH64)/i915 group=sys
-file path=kernel/misc/$(ARCH64)/drm group=sys
+file path=kernel/kmdb/$(ARCH64)/i915 group=sys mode=0555
+file path=kernel/kmdb/i915 group=sys mode=0555
+file path=kernel/misc/$(ARCH64)/drm group=sys mode=0755
 file path=kernel/misc/drm group=sys mode=0755
-file path=usr/lib/mdb/kvm/$(ARCH64)/i915.so group=sys
-file path=usr/lib/mdb/kvm/i915.so group=sys
-file path=usr/share/man/man7d/i915.4d
+file path=usr/lib/mdb/kvm/$(ARCH64)/i915.so group=sys mode=0555
+file path=usr/lib/mdb/kvm/i915.so group=sys mode=0555
+file path=usr/share/man/man7d/i915.7d
 legacy pkg=SUNWdrmr desc="Direct Rendering Manager kernel drivers and modules" \
     name="DRM Kernel Drivers, (Root)"
 license usr/src/uts/common/io/drm/LICENSE_DRM \
     license=usr/src/uts/common/io/drm/LICENSE_DRM
+license usr/src/uts/intel/io/i915/LICENSE_I915 \
+    license=usr/src/uts/intel/io/i915/LICENSE_I915

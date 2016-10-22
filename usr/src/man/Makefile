@@ -13,9 +13,7 @@
 # Copyright 2011, Richard Lowe
 #
 
-SUBDIRS=	man1		\
-		man3x		\
-		man7		\
+SUBDIRS= \
 		man7d		\
 		man7i
 

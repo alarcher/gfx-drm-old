@@ -38,12 +38,3 @@
 #
 licenses
 
-#
-# 64-bit "foo" cmd
-#
-usr/bin/amd64/foo	i386
-usr/bin/sparcv9/foo	sparc
-
-# build-time only
-usr/include/priv_utils.h
-usr/lib/ld

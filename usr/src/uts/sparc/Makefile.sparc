@@ -208,7 +208,7 @@ ALL_DEFS	 = $(MACHINE_DEFS) $(DEBUG_DEFS) $(OPTION_DEFS)
 #
 #	Common Drivers (usually pseudo drivers) (/kernel/drv):
 #
-DRV_KMODS	+= foo
+DRV_KMODS	+=
 
 #
 #	Exec Class Modules (/kernel/exec):

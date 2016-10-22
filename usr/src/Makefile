@@ -35,18 +35,18 @@ include Makefile.master
 # it defines TARGETDIRS and ROOTDIRS.
 include Targetdirs
 
-COMMON_SUBDIRS=	uts lib cmd man #test
+COMMON_SUBDIRS=	uts cmd man #test
 sparc_SUBDIRS=
 i386_SUBDIRS=
 
 SUBDIRS= $(COMMON_SUBDIRS) $($(MACH)_SUBDIRS)
 
-HDRSUBDIRS=	uts head lib cmd
+HDRSUBDIRS=	uts cmd
 
 # UCB headers are bug-for-bug compatible and not checkable against the header
 # standards.
 #
-CHKHDRSUBDIRS=	head uts lib
+CHKHDRSUBDIRS=	uts
 
 # The check target also causes smf(5) service manifests to be validated.
 CHKMFSTSUBDIRS=	cmd
@@ -54,7 +54,7 @@ CHKMFSTSUBDIRS=	cmd
 # And man page formats
 CHKMANSUBDIRS = man
 
-MSGSUBDIRS=	cmd lib
+MSGSUBDIRS=	cmd
 DOMAINS= \
 	SUNW_OST_ADMIN \
 	SUNW_OST_NETRPC \
@@ -81,7 +81,7 @@ check :=		TARGET= check
 #	cd pkg and do a 'make install'
 #
 
-all: mapfiles sgs .WAIT $(SUBDIRS) pkg
+all: sgs .WAIT $(SUBDIRS) pkg
 
 #
 # The _msg build is a two-step process.  First, the _msg dependency
@@ -102,7 +102,7 @@ install: install1 install2 _msg stage-licenses
 stage-licenses: install2
 	@cd pkg; pwd; $(MAKE) stage-licenses
 
-install1: mapfiles sgs
+install1: sgs
 
 install2: install1 $(SUBDIRS)
 
@@ -111,31 +111,26 @@ _msg: _msgdirs rootdirs FRC
 		cd $$m; pwd; $(MAKE) _msg; cd ..; \
 	done
 
-mapfiles: bldtools
-	@cd common/mapfiles/common; pwd; $(MAKE) install
-
-clean: $(SUBDIRS) head pkg
-clobber: $(SUBDIRS) head pkg clobber_local
+clean: $(SUBDIRS) pkg
+clobber: $(SUBDIRS) pkg clobber_local
 clobber_local:
 	@cd tools; pwd; $(MAKE) clobber
-	@cd common/mapfiles/common; pwd; $(MAKE) clobber
-#	@cd msg; pwd; $(MAKE) clobber
 
 # no closedbins here
 
-$(SUBDIRS) head pkg: FRC
+$(SUBDIRS) pkg: FRC
 	@cd $@; pwd; $(MAKE) $(TARGET)
 
 # librpcsvc has a dependency on headers installed by
 # userheaders, hence the .WAIT before libheaders.
-sgs: rootdirs .WAIT sysheaders userheaders .WAIT \
-	libheaders cmdheaders
+sgs: rootdirs .WAIT sysheaders .WAIT \
+	cmdheaders
 
 #
 # Top-level setup target to setup the development environment that includes
 # headers, tools and generated mapfiles.
 #
-setup:  bldtools sgs mapfiles
+setup:  bldtools sgs
 
 bldtools:
 	@cd tools; pwd; $(MAKE) install
@@ -151,12 +146,6 @@ _msgdirs:       $(MSGDIRS)
 $(ROOTDIRS) $(MSGDIRS):
 	$(INS.dir)
 
-userheaders: FRC
-	@cd head; pwd; $(MAKE) install_h
-
-libheaders: bldtools
-	@cd lib; pwd; $(MAKE) install_h
-
 sysheaders: FRC
 	@cd uts; pwd; $(MAKE) install_h
 
@@ -170,7 +159,7 @@ check:	$(CHKHDRSUBDIRS) $(CHKMFSTSUBDIRS) $(CHKMANSUBDIRS)
 # don't contain actual source code.
 #
 XRPRUNE = pkg prototypes
-XRINCDIRS = uts/common head ucbhead
+XRINCDIRS = uts/common
 
 cscope.out tags: FRC
 	$(XREF) -f -x $@
