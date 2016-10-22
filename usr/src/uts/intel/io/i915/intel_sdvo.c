@@ -1902,7 +1902,7 @@ static void intel_sdvo_get_lvds_modes(struct drm_connector *connector)
 	 */
 	intel_ddc_get_modes(connector, &intel_sdvo->ddc);
 
-	list_for_each_entry(newmode, struct drm_display_mode, &connector->probed_modes, head) {
+	list_for_each_entry(newmode, &connector->probed_modes, head) {
 		if (newmode->type & DRM_MODE_TYPE_PREFERRED) {
 			intel_sdvo->sdvo_lvds_fixed_mode =
 				drm_mode_duplicate(connector->dev, newmode);
@@ -2583,8 +2583,7 @@ static void intel_sdvo_output_cleanup(struct intel_sdvo *intel_sdvo)
 	struct drm_device *dev = intel_sdvo->base.base.dev;
 	struct drm_connector *connector, *tmp;
 
-	list_for_each_entry_safe(connector, tmp, struct drm_connector,
-				 &dev->mode_config.connector_list, head) {
+	list_for_each_entry_safe(connector, tmp, &dev->mode_config.connector_list, head) {
 		if (intel_attached_encoder(connector) == &intel_sdvo->base)
 			intel_sdvo_destroy(connector);
 	}

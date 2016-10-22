@@ -482,7 +482,7 @@ void intel_update_fbc(struct drm_device *dev)
 	 *   - new fb is too large to fit in compressed buffer
 	 *   - going to an unsupported config (interlace, pixel multiply, etc.)
 	 */
-	list_for_each_entry(tmp_crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(tmp_crtc, &dev->mode_config.crtc_list, head) {
 		if (intel_crtc_active(tmp_crtc) &&
 		    !to_intel_crtc(tmp_crtc)->primary_disabled) {
 			if (crtc) {
@@ -1079,7 +1079,7 @@ static struct drm_crtc *single_enabled_crtc(struct drm_device *dev)
 {
 	struct drm_crtc *crtc, *enabled = NULL;
 
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		if (intel_crtc_active(crtc)) {
 			if (enabled)
 				return NULL;
@@ -2377,7 +2377,7 @@ static void hsw_compute_wm_parameters(struct drm_device *dev,
 	wm[3] = ((sskpd >> 20) & 0x1FF) * 5;
 	wm[4] = ((sskpd >> 32) & 0x1FF) * 5;
 
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 		struct hsw_pipe_wm_parameters *p;
 
@@ -2399,7 +2399,7 @@ static void hsw_compute_wm_parameters(struct drm_device *dev,
 		p->cur_horiz_pixels = 64;
 	}
 
-	list_for_each_entry(plane, struct drm_plane, &dev->mode_config.plane_list, head) {
+	list_for_each_entry(plane, &dev->mode_config.plane_list, head) {
 		struct intel_plane *intel_plane = to_intel_plane(plane);
 		struct hsw_pipe_wm_parameters *p;
 
@@ -2638,7 +2638,7 @@ static void haswell_update_sprite_wm(struct drm_device *dev, int pipe,
 {
 	struct drm_plane *plane;
 
-	list_for_each_entry(plane, struct drm_plane, &dev->mode_config.plane_list, head) {
+	list_for_each_entry(plane, &dev->mode_config.plane_list, head) {
 		struct intel_plane *intel_plane = to_intel_plane(plane);
 
 		if (intel_plane->pipe == pipe) {

@@ -1422,7 +1422,7 @@ static int intel_ring_wait_request(struct intel_ring_buffer *ring, int n)
 			return 0;
 	}
 
-	list_for_each_entry(request, struct drm_i915_gem_request, &ring->request_list, list) {
+	list_for_each_entry(request, &ring->request_list, list) {
 		int space;
 
 		if (request->tail == 0xffffffff)

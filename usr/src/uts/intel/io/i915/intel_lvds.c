@@ -734,7 +734,7 @@ static void intel_find_lvds_downclock(struct drm_device *dev,
 	int temp_downclock;
 
 	temp_downclock = fixed_mode->clock;
-	list_for_each_entry(scan, struct drm_display_mode, &connector->probed_modes, head) {
+	list_for_each_entry(scan, &connector->probed_modes, head) {
 		/*
 		 * If one mode has the same resolution with the fixed_panel
 		 * mode while they have the different refresh rate, it means
@@ -824,8 +824,7 @@ bool intel_is_dual_link_lvds(struct drm_device *dev)
 	struct intel_encoder *encoder;
 	struct intel_lvds_encoder *lvds_encoder;
 
-	list_for_each_entry(encoder, struct intel_encoder,
-			&dev->mode_config.encoder_list, base.head) {
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list, base.head) {
 		if (encoder->type == INTEL_OUTPUT_LVDS) {
 			lvds_encoder = to_lvds_encoder(&encoder->base);
 
@@ -1018,7 +1017,7 @@ void intel_lvds_init(struct drm_device *dev)
 		connector->display_info.max_hfreq = 200;
 	}
 
-	list_for_each_entry(scan, struct drm_display_mode, &connector->probed_modes, head) {
+	list_for_each_entry(scan, &connector->probed_modes, head) {
 		if (scan->type & DRM_MODE_TYPE_PREFERRED) {
 			DRM_DEBUG_KMS("using preferred mode from EDID: ");
 			drm_mode_debug_printmodeline(scan);

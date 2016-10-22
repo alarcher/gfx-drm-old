@@ -517,7 +517,7 @@ static int i915_drm_freeze(struct drm_device *dev)
 		 * Disable CRTCs directly since we want to preserve sw state
 		 * for _thaw.
 		 */
-		list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head)
+		list_for_each_entry(crtc, &dev->mode_config.crtc_list, head)
 			dev_priv->display.crtc_disable(crtc);
 
 		intel_modeset_suspend_hw(dev);
@@ -1067,7 +1067,7 @@ i915_quiesce(dev_info_t *dip)
 		drm_kms_helper_poll_fini(dev);
 		mutex_lock(&dev->struct_mutex);
 
-		list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+		list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 			/* Skip inactive CRTCs */
 			if (!crtc->fb)
 				continue;
@@ -1102,7 +1102,7 @@ i915_quiesce(dev_info_t *dip)
 
 		if (MDB_TRACK_ENABLE) {
 			struct batch_info_list *r_list, *list_temp;
-			list_for_each_entry_safe(r_list, list_temp, struct batch_info_list, &dev_priv->batch_list, head) {
+			list_for_each_entry_safe(r_list, list_temp, &dev_priv->batch_list, head) {
 				list_del(&r_list->head);
 				drm_free(r_list->obj_list, r_list->num * sizeof(caddr_t), DRM_MEM_MAPS);
 				drm_free(r_list, sizeof (struct batch_info_list), DRM_MEM_MAPS);

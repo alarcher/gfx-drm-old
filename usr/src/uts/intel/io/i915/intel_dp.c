@@ -3050,7 +3050,7 @@ static bool intel_edp_init_connector(struct intel_dp *intel_dp,
 	intel_connector->edid = edid;
 
 	/* prefer fixed mode from EDID if available */
-	list_for_each_entry(scan, struct drm_display_mode, &connector->probed_modes, head) {
+	list_for_each_entry(scan, &connector->probed_modes, head) {
 		if ((scan->type & DRM_MODE_TYPE_PREFERRED)) {
 			fixed_mode = drm_mode_duplicate(dev, scan);
 			break;

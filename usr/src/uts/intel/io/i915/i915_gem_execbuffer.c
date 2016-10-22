@@ -261,7 +261,7 @@ i915_gem_execbuffer_relocate(struct drm_device *dev,
 	struct drm_i915_gem_object *obj;
 	int ret = 0;
 
-	list_for_each_entry(obj, struct drm_i915_gem_object, objects, exec_list) {
+	list_for_each_entry(obj, objects, exec_list) {
 		ret = i915_gem_execbuffer_relocate_object(obj, eb);
 		if (ret)
 			break;
@@ -401,9 +401,9 @@ i915_gem_execbuffer_reserve(struct intel_ring_buffer *ring,
 		need_mappable = need_fence || need_reloc_mappable(obj);
 
 		if (need_mappable)
-			list_move(&obj->exec_list, &ordered_objects, (caddr_t)obj);
+			list_move(&obj->exec_list, &ordered_objects);
 		else
-			list_move_tail(&obj->exec_list, &ordered_objects, (caddr_t)obj);
+			list_move_tail(&obj->exec_list, &ordered_objects);
 
 		obj->base.pending_read_domains = I915_GEM_GPU_DOMAINS & ~I915_GEM_DOMAIN_COMMAND;
 		obj->base.pending_write_domain = 0;
@@ -421,8 +421,7 @@ i915_gem_execbuffer_reserve(struct intel_ring_buffer *ring,
 		}
 	}
 
-	tmp = objects->next;
-	list_splice(&ordered_objects, objects, tmp);
+	list_splice(&ordered_objects, objects);
 
 	/* Attempt to pin all of the buffers into the GTT.
 	 * This is done in 3 phases:
@@ -441,7 +440,7 @@ i915_gem_execbuffer_reserve(struct intel_ring_buffer *ring,
 		int ret = 0;
 
 		/* Unbind any ill-fitting objects or pin. */
-		list_for_each_entry(obj, struct drm_i915_gem_object, objects, exec_list) {
+		list_for_each_entry(obj, objects, exec_list) {
 			struct drm_i915_gem_exec_object2 *entry = obj->exec_entry;
 			bool need_fence, need_mappable;
 			if (!obj->gtt_space)
@@ -467,7 +466,7 @@ i915_gem_execbuffer_reserve(struct intel_ring_buffer *ring,
 		}
 
 		/* Bind fresh objects */
-		list_for_each_entry(obj, struct drm_i915_gem_object, objects, exec_list) {
+		list_for_each_entry(obj, objects, exec_list) {
 			if (obj->gtt_space)
 				continue;
 
@@ -477,7 +476,7 @@ i915_gem_execbuffer_reserve(struct intel_ring_buffer *ring,
 		}
 
 err:		/* Decrement pin count for bound objects */
-		list_for_each_entry(obj, struct drm_i915_gem_object, objects, exec_list)
+		list_for_each_entry(obj, objects, exec_list)
 			i915_gem_execbuffer_unreserve_object(obj);
 
 		if (ret != -ENOSPC || retry++)
@@ -565,7 +564,7 @@ i915_gem_execbuffer_relocate_slow(struct drm_device *dev,
 			goto err;
 		}
 
-		list_add_tail(&obj->exec_list, objects, (caddr_t)obj);
+		list_add_tail(&obj->exec_list, objects);
 		obj->exec_handle = exec[i].handle;
 		obj->exec_entry = &exec[i];
 		eb_add_object(eb, obj);
@@ -577,10 +576,10 @@ i915_gem_execbuffer_relocate_slow(struct drm_device *dev,
 	if (ret)
 		goto err;
 
-	list_for_each_entry(obj, struct drm_i915_gem_object, objects, exec_list) {
+	list_for_each_entry(obj, objects, exec_list) {
 		int offset = obj->exec_entry - exec;
 		ret = i915_gem_execbuffer_relocate_object_slow(obj, eb,
-							       reloc + reloc_offset[offset]);
+					       reloc + reloc_offset[offset]);
 		if (ret)
 			goto err;
 	}
@@ -605,7 +604,7 @@ i915_gem_execbuffer_move_to_gpu(struct intel_ring_buffer *ring,
 	uint32_t flush_domains = 0;
 	int ret;
 
-	list_for_each_entry(obj, struct drm_i915_gem_object, objects, exec_list) {
+	list_for_each_entry(obj, objects, exec_list) {
 		ret = i915_gem_object_sync(obj, ring);
 		if (ret)
 			return ret;
@@ -681,7 +680,7 @@ i915_gem_execbuffer_move_to_active(struct list_head *objects,
 {
 	struct drm_i915_gem_object *obj;
 
-	list_for_each_entry(obj, struct drm_i915_gem_object, objects, exec_list) {
+	list_for_each_entry(obj, objects, exec_list) {
 		obj->base.write_domain = obj->base.pending_write_domain;
 		if (obj->base.write_domain == 0)
 			obj->base.pending_read_domains |= obj->base.read_domains;
@@ -901,7 +900,7 @@ i915_gem_do_execbuffer(struct drm_device *dev, void *data,
 		node = drm_alloc(sizeof (struct batch_info_list), DRM_MEM_MAPS);
 		node->num = args->buffer_count;
 		node->obj_list = drm_alloc(node->num * sizeof(caddr_t), DRM_MEM_MAPS);
-		list_add(&node->head, &dev_priv->batch_list, (caddr_t)node);
+		list_add(&node->head, &dev_priv->batch_list);
 	}
 	/* Look up object handles */
 	INIT_LIST_HEAD(&objects);
@@ -925,7 +924,7 @@ i915_gem_do_execbuffer(struct drm_device *dev, void *data,
 			goto err;
 		}
 
-		list_add_tail(&obj->exec_list, &objects, (caddr_t)obj);
+		list_add_tail(&obj->exec_list, &objects);
 		obj->exec_handle = exec[i].handle;
 		obj->exec_entry = &exec[i];
 		eb_add_object(eb, obj);

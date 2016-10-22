@@ -560,7 +560,7 @@ static void i915_hotplug_work_func(struct work_struct *work)
 
 	hpd_event_bits = dev_priv->hpd_event_bits;
 	dev_priv->hpd_event_bits = 0;
-	list_for_each_entry(connector, struct drm_connector, &mode_config->connector_list, head) {
+	list_for_each_entry(connector, &mode_config->connector_list, head) {
 		intel_connector = to_intel_connector(connector);
 		intel_encoder = intel_connector->encoder;
 		if (intel_encoder->hpd_pin > HPD_NONE &&
@@ -590,7 +590,7 @@ static void i915_hotplug_work_func(struct work_struct *work)
 
 	spin_unlock_irqrestore(&dev_priv->irq_lock, irqflags);
 
-	list_for_each_entry(connector, struct drm_connector, &mode_config->connector_list, head) {
+	list_for_each_entry(connector, &mode_config->connector_list, head) {
 		intel_connector = to_intel_connector(connector);
 		intel_encoder = intel_connector->encoder;
 		if (hpd_event_bits & (1 << intel_encoder->hpd_pin)) {
@@ -2633,12 +2633,12 @@ static void ibx_hpd_irq_setup(struct drm_device *dev)
 
 	if (HAS_PCH_IBX(dev)) {
 		mask &= ~SDE_HOTPLUG_MASK;
-		list_for_each_entry(intel_encoder, struct intel_encoder, &mode_config->encoder_list, base.head)
+		list_for_each_entry(intel_encoder, &mode_config->encoder_list, base.head)
 			if (dev_priv->hpd_stats[intel_encoder->hpd_pin].hpd_mark == HPD_ENABLED)
 				mask |= hpd_ibx[intel_encoder->hpd_pin];
 	} else {
 		mask &= ~SDE_HOTPLUG_MASK_CPT;
-		list_for_each_entry(intel_encoder, struct intel_encoder, &mode_config->encoder_list, base.head)
+		list_for_each_entry(intel_encoder, &mode_config->encoder_list, base.head)
 			if (dev_priv->hpd_stats[intel_encoder->hpd_pin].hpd_mark == HPD_ENABLED)
 				mask |= hpd_cpt[intel_encoder->hpd_pin];
 	}
@@ -3364,7 +3364,7 @@ static void i915_hpd_irq_setup(struct drm_device *dev)
 		hotplug_en &= ~HOTPLUG_INT_EN_MASK;
 		/* Note HDMI and DP share hotplug bits */
 		/* enable bits are the same for all generations */
-		list_for_each_entry(intel_encoder, struct intel_encoder, &mode_config->encoder_list, base.head)
+		list_for_each_entry(intel_encoder, &mode_config->encoder_list, base.head)
 			if (dev_priv->hpd_stats[intel_encoder->hpd_pin].hpd_mark == HPD_ENABLED)
 				hotplug_en |= hpd_mask_i915[intel_encoder->hpd_pin];
 		/* Programming the CRT detection parameters tends
@@ -3533,7 +3533,7 @@ static void i915_reenable_hotplug_timer_func(void* data)
 
 		dev_priv->hpd_stats[i].hpd_mark = HPD_ENABLED;
 
-		list_for_each_entry(connector, struct drm_connector, &mode_config->connector_list, head) {
+		list_for_each_entry(connector, &mode_config->connector_list, head) {
 			struct intel_connector *intel_connector = to_intel_connector(connector);
 
 			if (intel_connector->encoder->hpd_pin == i) {
@@ -3643,7 +3643,7 @@ void intel_hpd_init(struct drm_device *dev)
 		dev_priv->hpd_stats[i].hpd_cnt = 0;
 		dev_priv->hpd_stats[i].hpd_mark = HPD_ENABLED;
 	}
-	list_for_each_entry(connector, struct drm_connector, &mode_config->connector_list, head) {
+	list_for_each_entry(connector, &mode_config->connector_list, head) {
 		struct intel_connector *intel_connector = to_intel_connector(connector);
 		connector->polled = intel_connector->polled;
 		if (!connector->polled && I915_HAS_HOTPLUG(dev) && intel_connector->encoder->hpd_pin > HPD_NONE)

@@ -2091,7 +2091,7 @@ void intel_display_handle_reset(struct drm_device *dev)
 	 * pending_flip_queue really got woken up.
 	 */
 
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 		enum plane plane = intel_crtc->plane;
 
@@ -2099,7 +2099,7 @@ void intel_display_handle_reset(struct drm_device *dev)
 		intel_finish_page_flip_plane(dev, plane);
 	}
 
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 
 		mutex_lock(&crtc->mutex);
@@ -3165,7 +3165,7 @@ static void intel_enable_planes(struct drm_crtc *crtc)
 	enum pipe pipe = to_intel_crtc(crtc)->pipe;
 	struct intel_plane *intel_plane;
 
-	list_for_each_entry(intel_plane, struct intel_plane, &dev->mode_config.plane_list, base.head)
+	list_for_each_entry(intel_plane, &dev->mode_config.plane_list, base.head)
 		if (intel_plane->pipe == pipe)
 			intel_plane_restore(&intel_plane->base);
 }
@@ -3176,7 +3176,7 @@ static void intel_disable_planes(struct drm_crtc *crtc)
 	enum pipe pipe = to_intel_crtc(crtc)->pipe;
 	struct intel_plane *intel_plane;
 
-	list_for_each_entry(intel_plane, struct intel_plane, &dev->mode_config.plane_list, base.head)
+	list_for_each_entry(intel_plane, &dev->mode_config.plane_list, base.head)
 		if (intel_plane->pipe == pipe)
 			intel_plane_disable(&intel_plane->base);
 }
@@ -3820,7 +3820,7 @@ static void intel_crtc_disable(struct drm_crtc *crtc)
 	}
 
 	/* Update computed state. */
-	list_for_each_entry(connector, struct drm_connector, &dev->mode_config.connector_list, head) {
+	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
 		if (!connector->encoder || !connector->encoder->crtc)
 			continue;
 
@@ -3836,7 +3836,7 @@ void intel_modeset_disable(struct drm_device *dev)
 {
 	struct drm_crtc *crtc;
 
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		if (crtc->enabled)
 			intel_crtc_disable(crtc);
 	}
@@ -5035,7 +5035,7 @@ static void ironlake_init_pch_refclk(struct drm_device *dev)
 	bool can_ssc = false;
 
 	/* We need to take the global config into account */
-	list_for_each_entry(encoder, struct intel_encoder, &mode_config->encoder_list,
+	list_for_each_entry(encoder, &mode_config->encoder_list,
 			    base.head) {
 		switch (encoder->type) {
 		case INTEL_OUTPUT_LVDS:
@@ -5181,7 +5181,7 @@ static void lpt_init_pch_refclk(struct drm_device *dev)
 	bool is_sdv = false;
 	u32 tmp;
 
-	list_for_each_entry(encoder, struct intel_encoder, &mode_config->encoder_list, base.head) {
+	list_for_each_entry(encoder, &mode_config->encoder_list, base.head) {
 		switch (encoder->type) {
 		case INTEL_OUTPUT_ANALOG:
 			has_vga = true;
@@ -5934,7 +5934,7 @@ static void haswell_modeset_global_resources(struct drm_device *dev)
 	bool enable = false;
 	struct intel_crtc *crtc;
 
-	list_for_each_entry(crtc, struct intel_crtc, &dev->mode_config.crtc_list, base.head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, base.head) {
 		if (!crtc->base.enabled)
 			continue;
 
@@ -6844,7 +6844,7 @@ bool intel_get_load_detect_pipe(struct drm_connector *connector,
 	}
 
 	/* Find an unused one (if possible) */
-	list_for_each_entry(possible_crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(possible_crtc, &dev->mode_config.crtc_list, head) {
 		i++;
 		if (!(encoder->possible_crtcs & (1 << i)))
 			continue;
@@ -7139,7 +7139,7 @@ void intel_mark_idle(struct drm_device *dev)
 	if (!i915_powersave)
 		return;
 
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		if (!crtc->fb)
 			continue;
 
@@ -7156,7 +7156,7 @@ void intel_mark_fb_busy(struct drm_i915_gem_object *obj,
 	if (!i915_powersave)
 		return;
 
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		if (!crtc->fb)
 			continue;
 
@@ -7646,7 +7646,7 @@ static bool intel_encoder_crtc_ok(struct drm_encoder *encoder,
 
 	dev = crtc->dev;
 
-	list_for_each_entry(tmp, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(tmp, &dev->mode_config.crtc_list, head) {
 		if (tmp == crtc)
 			break;
 		crtc_mask <<= 1;
@@ -7668,13 +7668,13 @@ static void intel_modeset_update_staged_output_state(struct drm_device *dev)
 	struct intel_encoder *encoder;
 	struct intel_connector *connector;
 
-	list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+	list_for_each_entry(connector, &dev->mode_config.connector_list,
 			    base.head) {
 		connector->new_encoder =
 			to_intel_encoder(connector->base.encoder);
 	}
 
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 			    base.head) {
 		encoder->new_crtc =
 			to_intel_crtc(encoder->base.crtc);
@@ -7691,12 +7691,12 @@ static void intel_modeset_commit_output_state(struct drm_device *dev)
 	struct intel_encoder *encoder;
 	struct intel_connector *connector;
 
-	list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+	list_for_each_entry(connector, &dev->mode_config.connector_list,
 			    base.head) {
 		connector->base.encoder = &connector->new_encoder->base;
 	}
 
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 			    base.head) {
 		encoder->base.crtc = &encoder->new_crtc->base;
 	}
@@ -7776,7 +7776,7 @@ compute_baseline_pipe_bpp(struct intel_crtc *crtc,
 	pipe_config->pipe_bpp = bpp;
 
 	/* Clamp display bpp to EDID value */
-	list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+	list_for_each_entry(connector, &dev->mode_config.connector_list,
 			    base.head) {
 		if (!connector->new_encoder ||
 		    connector->new_encoder->new_crtc != crtc)
@@ -7824,7 +7824,7 @@ static bool check_encoder_cloning(struct drm_crtc *crtc)
 	bool uncloneable_encoders = false;
 	struct intel_encoder *encoder;
 
-	list_for_each_entry(encoder, struct intel_encoder, &crtc->dev->mode_config.encoder_list,
+	list_for_each_entry(encoder, &crtc->dev->mode_config.encoder_list,
 			    base.head) {
 		if (&encoder->new_crtc->base != crtc)
 			continue;
@@ -7881,7 +7881,7 @@ encoder_retry:
 	 * adjust it according to limitations or connector properties, and also
 	 * a chance to reject the mode entirely.
 	 */
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 			    base.head) {
 
 		if (&encoder->new_crtc->base != crtc)
@@ -7956,7 +7956,7 @@ intel_modeset_affected_pipes(struct drm_crtc *crtc, unsigned *modeset_pipes,
 	 * to be part of the prepare_pipes mask. We don't (yet) support global
 	 * modeset across multiple crtcs, so modeset_pipes will only have one
 	 * bit set at most. */
-	list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+	list_for_each_entry(connector, &dev->mode_config.connector_list,
 			    base.head) {
 		if (connector->base.encoder == &connector->new_encoder->base)
 			continue;
@@ -7972,7 +7972,7 @@ intel_modeset_affected_pipes(struct drm_crtc *crtc, unsigned *modeset_pipes,
 				1 << connector->new_encoder->new_crtc->pipe;
 	}
 
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 			    base.head) {
 		if (encoder->base.crtc == &encoder->new_crtc->base)
 			continue;
@@ -7988,7 +7988,7 @@ intel_modeset_affected_pipes(struct drm_crtc *crtc, unsigned *modeset_pipes,
 	}
 
 	/* Check for any pipes that will be fully disabled ... */
-	list_for_each_entry(intel_crtc, struct intel_crtc, &dev->mode_config.crtc_list,
+	list_for_each_entry(intel_crtc, &dev->mode_config.crtc_list,
 			    base.head) {
 		bool used = false;
 
@@ -7996,7 +7996,7 @@ intel_modeset_affected_pipes(struct drm_crtc *crtc, unsigned *modeset_pipes,
 		if (!intel_crtc->base.enabled)
 			continue;
 
-		list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+		list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 				    base.head) {
 			if (encoder->new_crtc == intel_crtc)
 				used = true;
@@ -8041,7 +8041,7 @@ static bool intel_crtc_in_use(struct drm_crtc *crtc)
 	struct drm_encoder *encoder;
 	struct drm_device *dev = crtc->dev;
 
-	list_for_each_entry(encoder, struct drm_encoder, &dev->mode_config.encoder_list, head)
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list, head)
 		if (encoder->crtc == crtc)
 			return true;
 
@@ -8055,7 +8055,7 @@ intel_modeset_update_state(struct drm_device *dev, unsigned prepare_pipes)
 	struct intel_crtc *intel_crtc;
 	struct drm_connector *connector;
 
-	list_for_each_entry(intel_encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+	list_for_each_entry(intel_encoder, &dev->mode_config.encoder_list,
 			    base.head) {
 		if (!intel_encoder->base.crtc)
 			continue;
@@ -8069,12 +8069,12 @@ intel_modeset_update_state(struct drm_device *dev, unsigned prepare_pipes)
 	intel_modeset_commit_output_state(dev);
 
 	/* Update computed state. */
-	list_for_each_entry(intel_crtc, struct intel_crtc, &dev->mode_config.crtc_list,
+	list_for_each_entry(intel_crtc, &dev->mode_config.crtc_list,
 			    base.head) {
 		intel_crtc->base.enabled = intel_crtc_in_use(&intel_crtc->base);
 	}
 
-	list_for_each_entry(connector, struct drm_connector, &dev->mode_config.connector_list, head) {
+	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
 		if (!connector->encoder || !connector->encoder->crtc)
 			continue;
 
@@ -8097,7 +8097,7 @@ intel_modeset_update_state(struct drm_device *dev, unsigned prepare_pipes)
 }
 
 #define for_each_intel_crtc_masked(dev, mask, _intel_crtc) \
-	list_for_each_entry((_intel_crtc), struct intel_crtc, \
+	list_for_each_entry((_intel_crtc), \
 			    &(dev)->mode_config.crtc_list, \
 			    base.head) \
 		if (mask & (1 <<(_intel_crtc)->pipe)) \
@@ -8209,7 +8209,7 @@ check_connector_state(struct drm_device *dev)
 {
 	struct intel_connector *connector;
 
-	list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+	list_for_each_entry(connector, &dev->mode_config.connector_list,
 			    base.head) {
 		/* This also checks the encoder/connector hw state with the
 		 * ->get_hw_state callbacks. */
@@ -8226,7 +8226,7 @@ check_encoder_state(struct drm_device *dev)
 	struct intel_encoder *encoder;
 	struct intel_connector *connector;
 
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 			    base.head) {
 		bool enabled = false;
 		bool active = false;
@@ -8241,7 +8241,7 @@ check_encoder_state(struct drm_device *dev)
 		if (encoder->connectors_active && !encoder->base.crtc)
 		     DRM_ERROR("encoder's active_connectors set, but no crtc\n");
 
-		list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+		list_for_each_entry(connector, &dev->mode_config.connector_list,
 				    base.head) {
 			if (connector->base.encoder != &encoder->base)
 				continue;
@@ -8286,7 +8286,7 @@ check_crtc_state(struct drm_device *dev)
 	struct intel_encoder *encoder;
 	struct intel_crtc_config pipe_config;
 
-	list_for_each_entry(crtc, struct intel_crtc, &dev->mode_config.crtc_list,
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list,
 			    base.head) {
 		bool enabled = false;
 		bool active = false;
@@ -8299,7 +8299,7 @@ check_crtc_state(struct drm_device *dev)
 		if (crtc->active && !crtc->base.enabled)
 		     DRM_ERROR("active crtc, but not enabled in sw tracking\n");
 
-		list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+		list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 				    base.head) {
 			if (encoder->base.crtc != &crtc->base)
 				continue;
@@ -8322,7 +8322,7 @@ check_crtc_state(struct drm_device *dev)
 		if (crtc->pipe == PIPE_A && dev_priv->quirks & QUIRK_PIPEA_FORCE)
 			active = crtc->active;
 
-		list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+		list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 				    base.head) {
 			enum pipe pipe;
 			if (encoder->base.crtc != &crtc->base)
@@ -8377,7 +8377,7 @@ check_shared_dpll_state(struct drm_device *dev)
 		     DRM_DEBUG_KMS("pll on state mismatch (expected %i, found %i)\n",
 		     pll->on, active);
 
-		list_for_each_entry(crtc, struct intel_crtc, &dev->mode_config.crtc_list,
+		list_for_each_entry(crtc, &dev->mode_config.crtc_list,
 				    base.head) {
 			if (crtc->base.enabled && intel_crtc_to_shared_dpll(crtc) == pll)
 				enabled_crtcs++;
@@ -8565,12 +8565,12 @@ static int intel_set_config_save_state(struct drm_device *dev,
 	 * restored, not the drivers personal bookkeeping.
 	 */
 	count = 0;
-	list_for_each_entry(encoder, struct drm_encoder, &dev->mode_config.encoder_list, head) {
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list, head) {
 		config->save_encoder_crtcs[count++] = encoder->crtc;
 	}
 
 	count = 0;
-	list_for_each_entry(connector, struct drm_connector, &dev->mode_config.connector_list, head) {
+	list_for_each_entry(connector, &dev->mode_config.connector_list, head) {
 		config->save_connector_encoders[count++] = connector->encoder;
 	}
 
@@ -8585,13 +8585,13 @@ static void intel_set_config_restore_state(struct drm_device *dev,
 	int count;
 
 	count = 0;
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list, base.head) {
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list, base.head) {
 		encoder->new_crtc =
 			to_intel_crtc(config->save_encoder_crtcs[count++]);
 	}
 
 	count = 0;
-	list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list, base.head) {
+	list_for_each_entry(connector, &dev->mode_config.connector_list, base.head) {
 		connector->new_encoder =
 			to_intel_encoder(config->save_connector_encoders[count++]);
 	}
@@ -8669,7 +8669,7 @@ intel_modeset_stage_output_state(struct drm_device *dev,
 	WARN_ON(set->fb && (set->num_connectors == 0));
 
 	count = 0;
-	list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+	list_for_each_entry(connector, &dev->mode_config.connector_list,
 			    base.head) {
 		/* Otherwise traverse passed in connector list and get encoders
 		 * for them. */
@@ -8703,7 +8703,7 @@ intel_modeset_stage_output_state(struct drm_device *dev,
 
 	/* Update crtc of enabled connectors. */
 	count = 0;
-	list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+	list_for_each_entry(connector, &dev->mode_config.connector_list,
 			    base.head) {
 		if (!connector->new_encoder)
 			continue;
@@ -8729,10 +8729,9 @@ intel_modeset_stage_output_state(struct drm_device *dev,
 	}
 
 	/* Check for any encoders that needs to be disabled. */
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 			    base.head) {
-		list_for_each_entry(connector, struct intel_connector,
-				    &dev->mode_config.connector_list,
+		list_for_each_entry(connector, &dev->mode_config.connector_list,
 				    base.head) {
 			if (connector->new_encoder == encoder) {
 				WARN_ON(!connector->new_encoder->new_crtc);
@@ -8891,7 +8890,7 @@ static void ibx_pch_dpll_disable(struct drm_i915_private *dev_priv,
 	uint32_t reg, val;
 
 	/* Make sure no transcoder isn't still depending on us. */
-	list_for_each_entry(crtc, struct intel_crtc, &dev->mode_config.crtc_list, base.head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, base.head) {
 		if (intel_crtc_to_shared_dpll(crtc) == pll)
 			assert_pch_transcoder_disabled(dev_priv, crtc->pipe);
 	}
@@ -9006,8 +9005,7 @@ static int intel_encoder_clones(struct intel_encoder *encoder)
 	int index_mask = 0;
 	int entry = 0;
 
-	list_for_each_entry(source_encoder, struct intel_encoder,
-			    &dev->mode_config.encoder_list, base.head) {
+	list_for_each_entry(source_encoder, &dev->mode_config.encoder_list, base.head) {
 
 		if (encoder == source_encoder)
 			index_mask |= (1 << entry);
@@ -9148,7 +9146,7 @@ static void intel_setup_outputs(struct drm_device *dev)
 	if (SUPPORTS_TV(dev))
 		intel_tv_init(dev);
 
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list, base.head) {
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list, base.head) {
 		encoder->base.possible_crtcs = encoder->crtc_mask;
 		encoder->base.possible_clones =
 			intel_encoder_clones(encoder);
@@ -9687,8 +9685,7 @@ static void intel_enable_pipe_a(struct drm_device *dev)
 	/* We can't just switch on the pipe A, we need to set things up with a
 	 * proper mode and output configuration. As a gross hack, enable pipe A
 	 * by enabling the load detect pipe once. */
-	list_for_each_entry(connector, struct intel_connector,
-			    &dev->mode_config.connector_list,
+	list_for_each_entry(connector, &dev->mode_config.connector_list,
 			    base.head) {
 		if (connector->encoder->type == INTEL_OUTPUT_ANALOG) {
 			crt = &connector->base;
@@ -9754,7 +9751,7 @@ static void intel_sanitize_crtc(struct intel_crtc *crtc)
 		crtc->plane = plane;
 
 		/* ... and break all links. */
-		list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+		list_for_each_entry(connector, &dev->mode_config.connector_list,
 				    base.head) {
 			if (connector->encoder->base.crtc != &crtc->base)
 				continue;
@@ -9836,8 +9833,7 @@ static void intel_sanitize_encoder(struct intel_encoder *encoder)
 		 * a bug in one of the get_hw_state functions. Or someplace else
 		 * in our code, like the register restore mess on resume. Clamp
 		 * things to off as a safer default. */
-		list_for_each_entry(connector, struct intel_connector,
-				    &dev->mode_config.connector_list,
+		list_for_each_entry(connector, &dev->mode_config.connector_list,
 				    base.head) {
 			if (connector->encoder != encoder)
 				continue;
@@ -9869,7 +9865,7 @@ static void intel_modeset_readout_hw_state(struct drm_device *dev)
 	struct intel_connector *connector;
 	int i;
 
-	list_for_each_entry(crtc, struct intel_crtc, &dev->mode_config.crtc_list,
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list,
 			    base.head) {
 		(void) memset(&crtc->config, 0, sizeof(crtc->config));
 
@@ -9892,7 +9888,7 @@ static void intel_modeset_readout_hw_state(struct drm_device *dev)
 
 		pll->on = pll->get_hw_state(dev_priv, pll, &pll->hw_state);
 		pll->active = 0;
-		list_for_each_entry(crtc, struct intel_crtc, &dev->mode_config.crtc_list,
+		list_for_each_entry(crtc, &dev->mode_config.crtc_list,
 				    base.head) {
 			if (crtc->active && intel_crtc_to_shared_dpll(crtc) == pll)
 				pll->active++;
@@ -9903,7 +9899,7 @@ static void intel_modeset_readout_hw_state(struct drm_device *dev)
 			      pll->name, pll->refcount, pll->on);
 	}
 
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 			    base.head) {
 		pipe = 0;
 
@@ -9924,7 +9920,7 @@ static void intel_modeset_readout_hw_state(struct drm_device *dev)
 			      pipe);
 	}
 
-	list_for_each_entry(connector, struct intel_connector, &dev->mode_config.connector_list,
+	list_for_each_entry(connector, &dev->mode_config.connector_list,
 			    base.head) {
 		if (connector->get_hw_state(connector)) {
 			connector->base.dpms = DRM_MODE_DPMS_ON;
@@ -9956,7 +9952,7 @@ void intel_modeset_setup_hw_state(struct drm_device *dev,
 	intel_modeset_readout_hw_state(dev);
 
 	/* HW state is read out, now we need to sanitize this mess. */
-	list_for_each_entry(encoder, struct intel_encoder, &dev->mode_config.encoder_list,
+	list_for_each_entry(encoder, &dev->mode_config.encoder_list,
 			    base.head) {
 		intel_sanitize_encoder(encoder);
 	}
@@ -9991,7 +9987,7 @@ void intel_modeset_setup_hw_state(struct drm_device *dev,
 			__intel_set_mode(crtc, &crtc->mode, crtc->x, crtc->y,
 					 crtc->fb);
 		}
-		list_for_each_entry(plane, struct drm_plane, &dev->mode_config.plane_list, head)
+		list_for_each_entry(plane, &dev->mode_config.plane_list, head)
 			intel_plane_restore(plane);
 
 		i915_redisable_vga(dev);
@@ -10035,7 +10031,7 @@ void intel_modeset_cleanup(struct drm_device *dev)
 	drm_kms_helper_poll_fini(dev);
 	mutex_lock(&dev->struct_mutex);
 
-	list_for_each_entry(crtc, struct drm_crtc, &dev->mode_config.crtc_list, head) {
+	list_for_each_entry(crtc, &dev->mode_config.crtc_list, head) {
 		/* Skip inactive CRTCs */
 		if (!crtc->fb)
 			continue;

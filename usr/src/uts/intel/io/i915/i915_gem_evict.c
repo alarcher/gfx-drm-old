@@ -41,7 +41,7 @@ mark_free(struct drm_i915_gem_object *obj, struct list_head *unwind)
 	if (obj->pin_count)
 		return false;
 
-	list_add(&obj->exec_list, unwind, (caddr_t)obj);
+	list_add(&obj->exec_list, unwind);
 	return drm_mm_scan_add_block(obj->gtt_space);
 }
 
@@ -89,7 +89,7 @@ i915_gem_evict_something(struct drm_device *dev, int min_size,
 				 min_size, alignment, cache_level);
 
 	/* First see if there is a large enough contiguous idle region... */
-	list_for_each_entry(obj, struct drm_i915_gem_object, &dev_priv->mm.inactive_list, mm_list) {
+	list_for_each_entry(obj, &dev_priv->mm.inactive_list, mm_list) {
 		if (mark_free(obj, &unwind_list))
 			goto found;
 	}
@@ -98,7 +98,7 @@ i915_gem_evict_something(struct drm_device *dev, int min_size,
 		goto none;
 
 	/* Now merge in the soon-to-be-expired objects... */
-	list_for_each_entry(obj, struct drm_i915_gem_object, &dev_priv->mm.active_list, mm_list) {
+	list_for_each_entry(obj, &dev_priv->mm.active_list, mm_list) {
 		if (mark_free(obj, &unwind_list))
 			goto found;
 	}
@@ -131,7 +131,7 @@ found:
 					    struct drm_i915_gem_object,
 					    exec_list);
 		if (drm_mm_scan_remove_block(obj->gtt_space)) {
-			list_move(&obj->exec_list, &eviction_list, (caddr_t)obj);
+			list_move(&obj->exec_list, &eviction_list);
 			drm_gem_object_reference(&obj->base);
 			continue;
 		}
@@ -176,7 +176,7 @@ i915_gem_evict_everything(struct drm_device *dev)
 	i915_gem_retire_requests(dev);
 
 	/* Having flushed everything, unbind() should never raise an error */
-	list_for_each_entry_safe(obj, next, struct drm_i915_gem_object,
+	list_for_each_entry_safe(obj, next,
 				&dev_priv->mm.inactive_list, mm_list)
 		/* LINTED */
 		if (obj->pin_count == 0)

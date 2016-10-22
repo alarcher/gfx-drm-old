@@ -396,8 +396,8 @@ i915_gem_object_create_stolen_for_preallocated(struct drm_device *dev,
 	obj->gtt_offset = gtt_offset;
 	obj->has_global_gtt_mapping = 1;
 
-	list_add_tail(&obj->global_list, &dev_priv->mm.bound_list, (caddr_t)obj);
-	list_add_tail(&obj->mm_list, &dev_priv->mm.inactive_list, (caddr_t)obj);
+	list_add_tail(&obj->global_list, &dev_priv->mm.bound_list);
+	list_add_tail(&obj->mm_list, &dev_priv->mm.inactive_list);
 
 	return obj;
 }

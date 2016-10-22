@@ -127,7 +127,7 @@ enum hpd_pin {
 #define for_each_pipe(p) for ((p) = 0; (p) < INTEL_INFO(dev)->num_pipes; (p)++)
 
 #define for_each_encoder_on_crtc(dev, __crtc, _intel_encoder) \
-	list_for_each_entry((_intel_encoder), struct intel_encoder, &(dev)->mode_config.encoder_list, base.head) \
+	list_for_each_entry((_intel_encoder), &(dev)->mode_config.encoder_list, base.head) \
 		if ((_intel_encoder)->base.crtc == (__crtc))
 
 struct drm_i915_private;

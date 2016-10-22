@@ -609,7 +609,7 @@ void drm_mode_list_concat(struct list_head *head, struct list_head *new)
 	struct list_head *entry, *tmp;
 
 	list_for_each_safe(entry, tmp, head) {
-		list_move_tail(entry, new, (caddr_t)entry);
+		list_move_tail(entry, new);
 	}
 }
 
@@ -1108,7 +1108,7 @@ void drm_mode_connector_list_update(struct drm_connector *connector)
 		}
 
 		if (!found_it) {
-			list_move_tail(&pmode->head, &connector->modes, (caddr_t)pmode);
+			list_move_tail(&pmode->head, &connector->modes);
 		}
 	}
 }

@@ -57,6 +57,7 @@
 /* linux sys/types.h */
 struct list_head {
 	struct list_head *next, *prev;
+	caddr_t contain_ptr_xxx;  // XXX should go away soon...
 };
 
 #define	list_entry(ptr, type, member)	container_of(ptr, type, member)
@@ -116,7 +117,7 @@ static inline void list_move(struct list_head *list, struct list_head *head)
 }
 
 /* conflict in sys/list.h */
-#define list_move_tail(list, head, entry) \
+#define list_move_tail(list, head) \
 	linux_list_move_tail(list, head)
 static inline void linux_list_move_tail(struct list_head *list,
     struct list_head *head)

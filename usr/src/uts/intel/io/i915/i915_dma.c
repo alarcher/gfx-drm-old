@@ -1591,7 +1591,7 @@ int i915_driver_unload(struct drm_device *dev)
 
 	if (MDB_TRACK_ENABLE) {
 		struct batch_info_list *r_list, *list_temp;
-		list_for_each_entry_safe(r_list, list_temp, struct batch_info_list, &dev_priv->batch_list, head) {
+		list_for_each_entry_safe(r_list, list_temp, &dev_priv->batch_list, head) {
 			list_del(&r_list->head);
 			drm_free(r_list->obj_list, r_list->num * sizeof(caddr_t), DRM_MEM_MAPS);
 			drm_free(r_list, sizeof (struct batch_info_list), DRM_MEM_MAPS);

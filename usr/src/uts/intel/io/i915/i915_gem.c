@@ -166,7 +166,7 @@ i915_gem_get_aperture_ioctl(DRM_IOCTL_ARGS)
 
 	pinned = 0;
 	mutex_lock(&dev->struct_mutex);
-	list_for_each_entry(obj, struct drm_i915_gem_object, &dev_priv->mm.bound_list, global_list)
+	list_for_each_entry(obj, &dev_priv->mm.bound_list, global_list)
 		if (obj->pin_count)
 			pinned += obj->gtt_space->size;
 	mutex_unlock(&dev->struct_mutex);
@@ -1149,7 +1149,7 @@ i915_gem_release_mmap(struct drm_i915_gem_object *obj)
 	if (obj->base.maplist.map->gtt_mmap) {
 		mutex_lock(&dev->page_fault_lock);
 		if (!list_empty(&obj->base.seg_list)) {
-			list_for_each_entry_safe(entry, temp, struct gem_map_list, &obj->base.seg_list, head) {
+			list_for_each_entry_safe(entry, temp, &obj->base.seg_list, head) {
 				devmap_unload(entry->dhp, entry->mapoffset, entry->maplen);
 				list_del(&entry->head);
 				drm_free(entry, sizeof (struct gem_map_list), DRM_MEM_MAPS);
@@ -1369,7 +1369,7 @@ i915_gem_object_get_pages(struct drm_i915_gem_object *obj)
 	if (ret)
 		return ret;
 
-	list_add_tail(&obj->global_list, &dev_priv->mm.unbound_list, (caddr_t)obj);
+	list_add_tail(&obj->global_list, &dev_priv->mm.unbound_list);
 	return 0;
 }
 
@@ -1395,8 +1395,8 @@ i915_gem_object_move_to_active(struct drm_i915_gem_object *obj,
 	}
 
 	/* Move from whatever list we were on to the tail of execution. */
-	list_move_tail(&obj->mm_list, &dev_priv->mm.active_list, (caddr_t)obj);
-	list_move_tail(&obj->ring_list, &ring->active_list, (caddr_t)obj);
+	list_move_tail(&obj->mm_list, &dev_priv->mm.active_list);
+	list_move_tail(&obj->ring_list, &ring->active_list);
 	obj->last_read_seqno = seqno;
 
 	if (obj->fenced_gpu_access) {
@@ -1407,7 +1407,7 @@ i915_gem_object_move_to_active(struct drm_i915_gem_object *obj,
                        struct drm_i915_fence_reg *reg;
 
                        reg = &dev_priv->fence_regs[obj->fence_reg];
-                       list_move_tail(&reg->lru_list, &dev_priv->mm.fence_list, (caddr_t)reg);
+                       list_move_tail(&reg->lru_list, &dev_priv->mm.fence_list);
                }
 	}
 	TRACE_GEM_OBJ_HISTORY(obj, "to active");
@@ -1422,7 +1422,7 @@ i915_gem_object_move_to_inactive(struct drm_i915_gem_object *obj)
 	BUG_ON(obj->base.write_domain & ~I915_GEM_GPU_DOMAINS);
 	BUG_ON(!obj->active);
 
-	list_move_tail(&obj->mm_list, &dev_priv->mm.inactive_list, (caddr_t)obj);
+	list_move_tail(&obj->mm_list, &dev_priv->mm.inactive_list);
 
 	list_del_init(&obj->ring_list);
 	obj->ring = NULL;
@@ -1571,7 +1571,7 @@ int __i915_add_request(struct intel_ring_buffer *ring,
 
 	request->emitted_jiffies = jiffies;
 	was_empty = list_empty(&ring->request_list);
-	list_add_tail(&request->list, &ring->request_list, (caddr_t)request);
+	list_add_tail(&request->list, &ring->request_list);
 	request->file_priv = NULL;
 
 	if (file) {
@@ -1580,7 +1580,7 @@ int __i915_add_request(struct intel_ring_buffer *ring,
 			spin_lock(&file_priv->mm.lock);
 			request->file_priv = file_priv;
 			list_add_tail(&request->client_list,
-			      &file_priv->mm.request_list, (caddr_t)request);
+			      &file_priv->mm.request_list);
 			spin_unlock(&file_priv->mm.lock);
 		}
 	}
@@ -1788,7 +1788,7 @@ void i915_gem_reset(struct drm_device *dev)
 	/* Move everything out of the GPU domains to ensure we do any
 	 * necessary invalidation upon reuse.
 	 */
-	list_for_each_entry(obj, struct drm_i915_gem_object,
+	list_for_each_entry(obj,
 			    &dev_priv->mm.inactive_list,
 			    mm_list)
 	{
@@ -2125,7 +2125,7 @@ i915_gem_object_unbind(struct drm_i915_gem_object *obj, uint32_t type)
 	i915_gem_object_unpin_pages(obj);
 
 	list_del(&obj->mm_list);
-	list_move_tail(&obj->global_list, &dev_priv->mm.unbound_list, (caddr_t)obj);
+	list_move_tail(&obj->global_list, &dev_priv->mm.unbound_list);
 	/* Avoid an unnecessary call to unbind on rebind. */
 	obj->map_and_fenceable = true;
 
@@ -2340,7 +2340,7 @@ static void i915_gem_object_update_fence(struct drm_i915_gem_object *obj,
 	if (enable) {
 		obj->fence_reg = reg;
 		fence->obj = obj;
-		list_move_tail(&fence->lru_list, &dev_priv->mm.fence_list, (caddr_t)fence);
+		list_move_tail(&fence->lru_list, &dev_priv->mm.fence_list);
 	} else {
 		obj->fence_reg = I915_FENCE_REG_NONE;
 		fence->obj = NULL;
@@ -2408,7 +2408,7 @@ i915_find_fence_reg(struct drm_device *dev)
 		return NULL;
 
 	/* None available, try to steal one or wait for a user to finish */
-	list_for_each_entry(reg, struct drm_i915_fence_reg, &dev_priv->mm.fence_list, lru_list) {
+	list_for_each_entry(reg, &dev_priv->mm.fence_list, lru_list) {
 		if (reg->pin_count)
 			continue;
 
@@ -2455,7 +2455,7 @@ i915_gem_object_get_fence(struct drm_i915_gem_object *obj)
 		reg = &dev_priv->fence_regs[obj->fence_reg];
 		if (!obj->fence_dirty) {
 			list_move_tail(&reg->lru_list,
-				       &dev_priv->mm.fence_list, (caddr_t)reg);
+				       &dev_priv->mm.fence_list);
 			return 0;
 		}
 	} else if (enable) {
@@ -2517,7 +2517,7 @@ static void i915_gem_verify_gtt(struct drm_device *dev)
 	struct drm_i915_gem_object *obj;
 	int err = 0;
 
-	list_for_each_entry(obj, struct drm_i915_gem_object, &dev_priv->mm.gtt_list, global_list) {
+	list_for_each_entry(obj, &dev_priv->mm.gtt_list, global_list) {
 		if (obj->gtt_space == NULL) {
 			DRM_ERROR("object found on GTT list with no space reserved\n");
 			err++;
@@ -2643,8 +2643,8 @@ search_free:
 			return ret;
 	}
 
-	list_move_tail(&obj->global_list, &dev_priv->mm.bound_list, (caddr_t)obj);
-	list_add_tail(&obj->mm_list, &dev_priv->mm.inactive_list, (caddr_t)obj);
+	list_move_tail(&obj->global_list, &dev_priv->mm.bound_list);
+	list_add_tail(&obj->mm_list, &dev_priv->mm.inactive_list);
 
 	obj->gtt_space = node;
 	obj->gtt_offset = node->start;
@@ -2775,7 +2775,7 @@ i915_gem_object_set_to_gtt_domain(struct drm_i915_gem_object *obj, int write)
 
 	/* And bump the LRU for this access */
 	if (i915_gem_object_is_inactive(obj))
-		list_move_tail(&obj->mm_list, &dev_priv->mm.inactive_list, (caddr_t)obj);
+		list_move_tail(&obj->mm_list, &dev_priv->mm.inactive_list);
 
 	return 0;
 }
@@ -3056,7 +3056,7 @@ i915_gem_ring_throttle(struct drm_device *dev, struct drm_file *file)
 	if (ret)
 		return ret;
 	spin_lock(&file_priv->mm.lock);
-	list_for_each_entry(request, struct drm_i915_gem_request, &file_priv->mm.request_list, client_list) {
+	list_for_each_entry(request, &file_priv->mm.request_list, client_list) {
 		if (time_after_eq(request->emitted_jiffies, recent_enough))
 			break;
 
