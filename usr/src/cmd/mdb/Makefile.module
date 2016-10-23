@@ -133,7 +133,7 @@ MAPFILE		= $(SRC)/cmd/mdb/common/modules/conf/mapfile
 
 # Modules typically make external references.  To provide for -zdefs use
 # and clean ldd(1) processing, explicitly define all external references.
-MAPFILE-EXT	= $(SRC)/cmd/mdb/common/modules/conf/mapfile-extern
+#MAPFILE-EXT	= $(SRC)/cmd/mdb/common/modules/conf/mapfile-extern
 
 #
 # kmdb is a kernel module, so we'll use the kernel's build flags.
@@ -166,8 +166,8 @@ lint: $$(LINTFILES)
 .PARALLEL: $(MODOBJS) $(KMODOBJS) mdb_tgt kmdb_tgt dmod kmod \
 	$(TARGETS) $(LINTFILES)
 
-$(MODFILE): dmod .WAIT $(MODOBJS) $$(MAPFILE-EXT)
-	$(LINK.c) $(ZDEFS) $(ZIGNORE) $(MAPFILE-EXT:%=-M%) $(GSHARED) \
+$(MODFILE): dmod .WAIT $(MODOBJS) $(MAPFILE)
+	$(LINK.c) $(ZDEFS) $(ZIGNORE) $(MAPFILE:%=-M%) $(GSHARED) \
 	    $(MODOBJS) -o $@ $(LDLIBS) -lc
 	$(CTFMERGE) -L VERSION -o $@ $(MODOBJS)
 	$(POST_PROCESS_SO)
