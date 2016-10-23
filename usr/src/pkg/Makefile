@@ -527,8 +527,8 @@ $(PDIR)/%.pub: $(PDIR)/%.res
 	if [ -s $(<) ]; then \
 		print "Publishing $(@F:%.pub=%) to $$r repository"; \
 		pkgsend -s file://$(PKGDEST)/repo.$$r publish \
-		    -d $(PKGROOT) -d $(TOOLSROOT) \
-		    -d license_files -d $(PKGROOT)/licenses \
+		    $(PKGROOT:%=-d %) $(TOOLSROOT:%=-d %) \
+		    -d license_files $(PKGROOT:%=-d %/licenses) \
 		    --fmri-in-manifest --no-index --no-catalog $(<) \
 		    > /dev/null; \
 	fi; \
