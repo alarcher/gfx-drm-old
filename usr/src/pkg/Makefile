@@ -108,7 +108,7 @@ PKGMOGRIFY= pkgmogrify
 #
 # In the real ON gate, this was "redist"
 #
-REPOS= skel
+REPOS= gfx-drm
 
 #
 # The packages directory will contain the processed manifests as
@@ -127,7 +127,7 @@ PDIR= packages.$(PKGMACH)
 $(PDIR)/developer-build-onbld.dep:= PKGROOT= $(TOOLSROOT)
 
 # In the real ON gate, was "on-nightly"
-PKGPUBLISHER= on-skel
+PKGPUBLISHER= gfx-drm
 
 #
 # To get these defaults, manifests should simply refer to $(PKGVERS).
