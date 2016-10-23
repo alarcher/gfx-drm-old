@@ -487,7 +487,7 @@ $(PDIR)/%.mog: manifests/%.mf
 	$(PKGDEBUG)$(PKGMOGRIFY) $(PKGMOG_VERBOSE) $(PM_INC:%= -I %) \
 		$(PKGMOG_DEFINES:%=-D %) -P $(@).vars -O $(@) \
 		$(<) $(PM_TRANSFORMS)
-	$(PKGDEBUG)eval REPO=skel PKGSTAT=current NODEPEND=$(SUPPRESSPKGDEP) \
+	$(PKGDEBUG)eval REPO=$(REPOS) PKGSTAT=current NODEPEND=$(SUPPRESSPKGDEP) \
 		`$(CAT) -s $(@).vars`; \
 	if [ -f $(@) ]; then \
 		if [ "$$NODEPEND" != "false" ]; then \
@@ -553,7 +553,7 @@ $(PROC_SYNTH_PKGS): $(PKGLISTS) $$(@F:%.mog=%.mf)
 		$(PKGMOG_DEFINES:%=-D %) -D PKGDEP_TYPE=$(PKGDEP_TYPE) \
 		-P $(@).vars -O $(@) $(@F:%.mog=%.mf) \
 		$(PM_TRANSFORMS) synthetic
-	$(PKGDEBUG)eval REPO=skel PKGSTAT=current `$(CAT) -s $(@).vars`; \
+	$(PKGDEBUG)eval REPO=$(REPOS) PKGSTAT=current `$(CAT) -s $(@).vars`; \
 	if [ -f $(@) ]; then \
 		$(LN) -s $(@F) \
 			$(PDIR)/$(@F:%.mog=%).metadata.$$PKGSTAT.$$REPO; \
