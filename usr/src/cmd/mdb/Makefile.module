@@ -186,20 +186,20 @@ $(MODFILE): dmod .WAIT $(MODOBJS) $$(MAPFILE-EXT)
 # Developers wanting to force a link test for a single module can use the
 # `linktest' target from within a module directory.
 #
-LINKTESTOBJ = $(KMDBDIR)/kmdb_modlinktest.o
-
-KMDB_LINKTEST = \
-	$(LD) $(ZDEFS) -dy -r -o $@.linktest $(KMODOBJS) \
-	$(STANDOBJS) $(LINKTESTOBJ) && \
-	$(RM) $@.linktest
-
-KMDB_LINKTEST_ENABLE=$(POUND_SIGN)
-$(KMDB_LINKTEST_ENABLE)KMDB_LINKTEST_CMD = $(KMDB_LINKTEST)
+#LINKTESTOBJ = $(KMDBDIR)/kmdb_modlinktest.o
+#
+#KMDB_LINKTEST = \
+#	$(LD) $(ZDEFS) -dy -r -o $@.linktest $(KMODOBJS) \
+#	$(STANDOBJS) $(LINKTESTOBJ) && \
+#	$(RM) $@.linktest
+#
+#KMDB_LINKTEST_ENABLE=$(POUND_SIGN)
+#$(KMDB_LINKTEST_ENABLE)KMDB_LINKTEST_CMD = $(KMDB_LINKTEST)
 
 #
 # Ensure that dmods don't use floating point
 #
-KMDB_FPTEST_CMD = $(KMDB_FPTEST)
+#KMDB_FPTEST_CMD = $(KMDB_FPTEST)
 
 $(KMODFILE): kmod .WAIT $(KMODOBJS) $(MAPFILE)
 	$(LD) -dy -r $(MAPFILE:%=-M%) -Nmisc/kmdbmod -o $@ $(KMODOBJS) \
@@ -208,7 +208,7 @@ $(KMODFILE): kmod .WAIT $(KMODOBJS) $(MAPFILE)
 	$(KMDB_FPTEST_CMD)
 	$(CTFMERGE) -f -L VERSION -o $@ $(KMODOBJS)
 	$(POST_PROCESS)
-	$(SETDYNFLAG) -f DF_1_NOKSYMS $@
+	$(SETDYNFLAG:%=%-f DF_1_NOKSYMS $@)
 
 linktest: linktest_check .WAIT kmod .WAIT $(KMODOBJS)
 	$(KMDB_LINKTEST)
