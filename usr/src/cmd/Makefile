@@ -42,7 +42,7 @@ include ../Makefile.master
 
 FIRST_SUBDIRS=
 
-COMMON_SUBDIRS=
+COMMON_SUBDIRS= mdb
 
 i386_SUBDIRS=
 
