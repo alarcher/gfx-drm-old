@@ -50,65 +50,99 @@
 u32 count, mappable_count, purgeable_count;
 size_t size, mappable_size, purgeable_size;
 
+static uintptr_t i915_drm_device_addr;
+static uintptr_t i915_dev_private_addr;
+
 /*
- * Initialize the proc_t walker by either using the given starting address,
- * or reading the value of the kernel's practive pointer.  We also allocate
- * a proc_t for storage, and save this using the walk_data pointer.
+ * Private arg(s) used for walk call-back functions below.
  */
+struct i915_wcb_arg {
+	size_t wa_list_off;
+};
+
+/*
+ * Walker for Linux-style lists (see drm_linux_list.h)
+ * Requires the address of a "struct list_head":
+ *	struct list_head {
+ *		struct list_head *next, *prev;
+ *	};
+ *
+ * Note: This iterates over the addresses of linked objects via the address of
+ * the list linkage member.  Note: that's usually NOT the same as the beginning
+ * of the object (unless the linkage member happens to be first in the object).
+ * Therefore, users of this walker generally need to subtract the offset of the
+ * linkage member to get the beginning of the "entry" (to use the terminology
+ * of drm_linux_list.h).  This subtraction in mdb corresponds to that done in
+ * the actual code using the container_of macro.
+ *
+ * Due to the container_of business, this walker is not easily used directly
+ * for interactive cases (you need to do the subtraction).  Nonetheless, we
+ * use it extensively here via mdb_pwalk with a call-back function handling
+ * the container_of subtraction and (optionally) printing the object.
+ *
+ * These lists terminate with a member that points to the list head, and
+ * and empty list has next and prev pointing to the head.  Therefore we
+ * need to keep the list head address around while walking.
+ */
+struct head_list_walk_state {
+	struct list_head hl_link_data;
+	uintptr_t  hl_head_addr;
+};
 static int
 head_list_walk_init(mdb_walk_state_t *wsp)
 {
+	struct head_list_walk_state *wspriv;
 
 	if (wsp->walk_addr == NULL) {
-		mdb_warn("head is NULL");
+		mdb_warn("head_list requires an address");
 		return (WALK_ERR);
 	}
 
-	wsp->walk_data = mdb_alloc(sizeof (struct list_head), UM_SLEEP);
+	wspriv = mdb_alloc(sizeof (*wspriv), UM_SLEEP);
+	wsp->walk_data = wspriv;
 
-	if (mdb_vread(wsp->walk_data, sizeof (struct list_head),
+	wspriv->hl_head_addr = wsp->walk_addr;
+	if (mdb_vread(&wspriv->hl_link_data, sizeof (struct list_head),
 	    wsp->walk_addr) == -1) {
-		mdb_warn("failed to read list head at %p", wsp->walk_addr);
-		return (WALK_DONE);
+		mdb_warn("head_list: read failed at %p", wspriv->hl_head_addr);
+		return (WALK_ERR);
 	}
 
-	wsp->walk_arg = (void *)wsp->walk_addr;
-
-	wsp->walk_addr =
-	    (uintptr_t)(((struct list_head *)wsp->walk_data)->next);
+	wsp->walk_addr = (uintptr_t) wspriv->hl_link_data.next;
 
 	return (WALK_NEXT);
 }
 
 /*
- * At each step, read a proc_t into our private storage, and then invoke
- * the callback function.  We terminate when we reach a NULL p_next pointer.
+ * At each step: If the "next" address is == HEAD, then done,
+ * else read the next element and call the callback function.
  */
 static int
 head_list_walk_step(mdb_walk_state_t *wsp)
 {
+	struct head_list_walk_state *wspriv = wsp->walk_data;
+	uintptr_t next;
 	int status;
 
-	if (wsp->walk_addr == NULL) {
-		mdb_warn("uncompletement list");
+	next = (uintptr_t) wspriv->hl_link_data.next;
+	if (next == wspriv->hl_head_addr)
+		return (WALK_DONE);
+	if (next == NULL) {
+		mdb_warn("incomplete list");
 		return (WALK_DONE);
 	}
 
-	if (mdb_vread(wsp->walk_data, sizeof (struct list_head),
+	if (mdb_vread(&wspriv->hl_link_data, sizeof (struct list_head),
 	    wsp->walk_addr) == -1) {
-		mdb_warn("failed to read list at %p", wsp->walk_addr);
-		return (WALK_DONE);
-	}
-
-	if ((void *)wsp->walk_addr == wsp->walk_arg) {
+		mdb_warn("head_list: read failed at %p", wsp->walk_addr);
 		return (WALK_DONE);
 	}
 
 	status = wsp->walk_callback(wsp->walk_addr, wsp->walk_data,
 	    wsp->walk_cbdata);
 
-	wsp->walk_addr =
-	    (uintptr_t)(((struct list_head *)wsp->walk_data)->next);
+	wsp->walk_addr = (uintptr_t) wspriv->hl_link_data.next;
+
 	return (status);
 }
 
@@ -119,7 +153,10 @@ head_list_walk_step(mdb_walk_state_t *wsp)
 static void
 head_list_walk_fini(mdb_walk_state_t *wsp)
 {
-	mdb_free(wsp->walk_data, sizeof (proc_t));
+	struct head_list_walk_state *wspriv;
+
+	wspriv = wsp->walk_data;
+	mdb_free(wspriv, sizeof (*wspriv));
 }
 
 static int
@@ -153,6 +190,7 @@ get_drm_dev(struct drm_device *drm_dev)
 		return (-1);
 	}
 
+	i915_drm_device_addr = array;
 	if (mdb_vread(drm_dev, sizeof (struct drm_device), array) == -1) {
 		mdb_warn("Failed to read drm_dev\n");
 		mdb_free(state, sizeof (struct drm_device));
@@ -173,6 +211,7 @@ get_i915_private(struct drm_i915_private *dev_priv)
 	ret = get_drm_dev(drm_dev);
 
 	if (ret == DCMD_OK) {
+		i915_dev_private_addr = (uintptr_t)drm_dev->dev_private;
 		if (mdb_vread(dev_priv, sizeof (struct drm_i915_private),
 		    (uintptr_t)drm_dev->dev_private) == -1) {
 			mdb_warn("Failed to read i915 private\n");
@@ -308,26 +347,8 @@ describe_obj(struct drm_i915_gem_object *obj)
 
 }
 
+
 static void
-i915_obj_info(struct drm_i915_gem_object *obj)
-{
-
-	/* "size", "gtt_off", "kaddr", "pfn_array" */
-
-	mdb_printf(" 0x%-8x  0x%-8x  0x%lx  0x%lx\n",
-	    obj->base.real_size, obj->gtt_offset, obj->base.kaddr,
-	    obj->base.pfnarray);
-
-	size += obj->base.real_size;
-	++count;
-	if (obj->map_and_fenceable) {
-		mappable_size += obj->base.real_size;
-		++mappable_count;
-	}
-
-}
-
-void
 i915_obj_list_node_help(void)
 {
 	mdb_printf("Print objects information for a given list pointer\n"
@@ -345,63 +366,90 @@ i915_obj_list_node(uintptr_t addr, uint_t flags, int argc,
     const mdb_arg_t *argv)
 {
 	int ret = DCMD_OK;
-	struct list_head list;
 	struct drm_i915_gem_object *obj;
 
 	if (!(flags & DCMD_ADDRSPEC))
 		return (DCMD_USAGE);
 
-	if (mdb_vread(&list, sizeof (struct list), addr) == -1) {
-		mdb_warn("failed to read list");
-		return (DCMD_ERR);
-	}
-
-	if (list.contain_ptr == 0) {
-		mdb_warn("no object!");
-		return (DCMD_ERR);
+	if (DCMD_HDRSPEC(flags)) {
+		mdb_printf("%s %20s %14s %9s %23s\n", "obj", "size", "gtt_off",
+		    "kaddr", "pfn_array");
 	}
 
 	obj = mdb_alloc(sizeof (struct drm_i915_gem_object), UM_SLEEP);
-	if (mdb_vread(obj, sizeof (struct drm_i915_gem_object),
-	    (uintptr_t)list.contain_ptr) == -1) {
+	if (mdb_vread(obj, sizeof (struct drm_i915_gem_object), addr) == -1) {
 		mdb_warn("failed to read object infor");
 		ret = DCMD_ERR;
 		goto err;
 	}
 
-	mdb_printf("0x%lx ", list.contain_ptr);
-	i915_obj_info(obj);
+	/* i915_obj_info(obj); */
+
+	/* "size", "gtt_off", "kaddr", "pfn_array" */
+
+	mdb_printf(" 0x%-8x  0x%-8x  0x%lx  0x%lx\n",
+	    obj->base.real_size, obj->gtt_offset, obj->base.kaddr,
+	    obj->base.pfnarray);
+
+	size += obj->base.real_size;
+	++count;
+	if (obj->map_and_fenceable) {
+		mappable_size += obj->base.real_size;
+		++mappable_count;
+	}
+
 
 err:
 	mdb_free(obj, sizeof (struct drm_i915_gem_object));
 	return (ret);
 }
 
+/*
+ * The lists we're walking bwlow use container_of(...) so we need a place to
+ * subtract the offset of the "list head" memember.  This wrapper does it.
+ * Callers use this with mdb_pwalk(), setting that offset in wa_list_off
+ * in the arg passed through to this callback.  Then all we need do here
+ * is simulate the container_of macro and call a dcmd with the address
+ * of the containing object.
+ */
 static int
-obj_walk_list(uintptr_t addr, const char *str)
+i915_obj_list_wcb(uintptr_t addr, const void *data, void *varg)
 {
-	struct list_head *head;
+	struct i915_wcb_arg *wa = varg;
+	int status;
+
+	/* See container_of */
+	addr -= wa->wa_list_off;
+	status = mdb_call_dcmd("i915_obj_list_node", addr, 0, 0, NULL);
+
+	if (status == DCMD_USAGE || status == DCMD_ABORT)
+		return (WALK_ERR);
+	return (WALK_NEXT);
+}
+
+/*
+ * Walk a list of: struct drm_i915_gem_object
+ * addr: address of the struct list_head
+ * str: heading (title)
+ * list_off: for container_of() corrections
+ */
+static int
+obj_walk_list(uintptr_t addr, const char *str, size_t list_off)
+{
+	struct i915_wcb_arg  wcb_arg;
 	int ret = DCMD_OK;
 
-	head = mdb_alloc(sizeof (struct list_head), UM_SLEEP);
+	wcb_arg.wa_list_off = list_off;
 
-	if (mdb_vread(head, sizeof (struct list_head), addr) == -1) {
-		mdb_warn("failed to read active_list");
-		ret = DCMD_ERR;
-		goto err;
-	}
 	mdb_printf("Dump %s List\n", str);
-	mdb_printf("%s %20s %14s %9s %23s\n", "obj", "size", "gtt_off",
-	    "kaddr", "pfn_array");
 
-	if (mdb_pwalk_dcmd("head_list", "i915_obj_list_node",
-	    0, NULL, (uintptr_t)head->prev) == -1) {
+	(void) mdb_inc_indent(2);
+	if (mdb_pwalk("head_list", i915_obj_list_wcb, &wcb_arg, addr) == -1) {
 		mdb_warn("failed to walk head_list");
 		ret = DCMD_ERR;
-		goto err;
 	}
-err:
-	mdb_free(head, sizeof (struct list_head));
+	(void) mdb_dec_indent(2);
+
 	return (ret);
 }
 
@@ -433,6 +481,7 @@ i915_obj_list(uintptr_t addr, uint_t flags, int argc, const mdb_arg_t *argv)
 {
 	uint_t	list_flag = 0;
 	struct drm_i915_private *dev_priv;
+	uintptr_t head_addr;
 	int ret = DCMD_OK;
 
 	if (flags & DCMD_ADDRSPEC) {
@@ -475,53 +524,36 @@ i915_obj_list(uintptr_t addr, uint_t flags, int argc, const mdb_arg_t *argv)
 			goto err;
 		}
 
-		/* dump whole gem objects list */
-		struct drm_device *drm_dev;
-		struct list_head *head;
-		drm_dev = mdb_alloc(sizeof (struct drm_device), UM_SLEEP);
-		ret = get_drm_dev(drm_dev);
-		if (ret != DCMD_OK)
-			goto err2;
+		/*
+		 * Need address of list head for obj_walk_list.
+		 * get_i915_private() sets i915_drm_device_addr
+		 */
+		head_addr = i915_drm_device_addr +
+		    OFFSETOF(struct drm_device, gem_objects_list);
+		ret = obj_walk_list(head_addr, "All (tracking)",
+		    OFFSETOF(struct drm_i915_gem_object, base.track_list));
 
-		head = mdb_alloc(sizeof (struct list_head), UM_SLEEP);
-		if (mdb_vread(head, sizeof (struct list_head),
-		    (uintptr_t)drm_dev->gem_objects_list.next) == -1) {
-			mdb_warn("failed to read whole gem list");
-			ret = DCMD_ERR;
-			goto err1;
-		}
-
-		mdb_printf("Dump %s List\n", "Whole gem objects");
-		mdb_printf("%s %20s %14s %9s %23s\n", "obj", "size",
-		    "gtt_off", "kaddr", "pfn_array");
-
-		if (mdb_pwalk_dcmd("head_list", "i915_obj_list_node",
-		    0, NULL, (uintptr_t)head->prev) == -1) {
-			mdb_warn("failed to walk head_list");
-			ret = DCMD_ERR;
-			goto err;
-		}
-err1:
-		mdb_free(head, sizeof (struct list_head));
-err2:
-		mdb_free(drm_dev, sizeof (struct drm_device));
 		goto err;
 	}
+
 	if (list_flag & ACTIVE_LIST) {
 		size = count = mappable_size = mappable_count = 0;
-		ret = obj_walk_list((uintptr_t)dev_priv->mm.active_list.next,
-		    "Activate");
+		head_addr = i915_dev_private_addr +
+		    OFFSETOF(struct drm_i915_private, mm.active_list);
+		ret = obj_walk_list(head_addr, "Active",
+		    OFFSETOF(struct drm_i915_gem_object, mm_list));
 		if (ret != DCMD_OK)
 			goto err;
 		mdb_printf("  %u [%u] active objects, 0x%lx [0x%lx] bytes\n",
 		    count, mappable_count, size, mappable_size);
-
 	}
 
 	if (list_flag & INACTIVE_LIST) {
 		size = count = mappable_size = mappable_count = 0;
-		ret = obj_walk_list((uintptr_t)dev_priv->mm.inactive_list.next,
-		    "Inactivate");
+		head_addr = i915_dev_private_addr +
+		    OFFSETOF(struct drm_i915_private, mm.inactive_list);
+		ret = obj_walk_list(head_addr, "Inactive",
+		    OFFSETOF(struct drm_i915_gem_object, mm_list));
 		if (ret != DCMD_OK)
 			goto err;
 		mdb_printf("  %u [%u] inactive objects, 0x%lx [0x%lx] bytes\n",
@@ -530,22 +562,25 @@ err2:
 
 	if (list_flag & BOUND_LIST) {
 		size = count = mappable_size = mappable_count = 0;
-		ret = obj_walk_list((uintptr_t)dev_priv->mm.bound_list.next,
-		    "Bound");
+		head_addr = i915_dev_private_addr +
+		    OFFSETOF(struct drm_i915_private, mm.bound_list);
+		ret = obj_walk_list(head_addr, "Bound",
+		    OFFSETOF(struct drm_i915_gem_object, global_list));
 		if (ret != DCMD_OK)
 			goto err;
-		mdb_printf("%u [%u] objects, 0x%lx [0x%lx] bytes in gtt\n",
+		mdb_printf("  %u [%u] bound objects, 0x%lx [0x%lx] bytes\n",
 		    count, mappable_count, size, mappable_size);
-
 	}
 
 	if (list_flag & UNBOUND_LIST) {
 		size = count = purgeable_size = purgeable_count = 0;
-		ret = obj_walk_list((uintptr_t)dev_priv->mm.unbound_list.next,
-		    "Unbound");
+		head_addr = i915_dev_private_addr +
+		    OFFSETOF(struct drm_i915_private, mm.unbound_list);
+		ret = obj_walk_list(head_addr, "Unbound",
+		    OFFSETOF(struct drm_i915_gem_object, global_list));
 		if (ret != DCMD_OK)
 			goto err;
-		mdb_printf("%u unbound objects, 0x%lx bytes\n", count, size);
+		mdb_printf("  %u unbound objects, 0x%lx bytes\n", count, size);
 	}
 
 err:
@@ -849,6 +884,9 @@ err1:
 
 }
 
+static int
+i915_obj_history_wcb(uintptr_t addr, const void *data, void *varg);
+
 void
 i915_obj_history_help(void)
 {
@@ -865,24 +903,14 @@ i915_obj_history_help(void)
 
 /* ARGSUSED */
 static int
-i915_obj_history(uintptr_t addr, uint_t flags, int argc, const mdb_arg_t *argv)
+i915_obj_history(uintptr_t obj_addr, uint_t flags, int argc, const mdb_arg_t *argv)
 {
-	struct drm_gem_object obj;
-	struct list_head node;
-	uintptr_t temp;
-	struct drm_history_list history_node;
+	uintptr_t head_addr;
 	int ret = DCMD_OK;
-	int condition = 1;
 	int mdb_track = 0;
 
 	if (!(flags & DCMD_ADDRSPEC)) {
 		return (DCMD_USAGE);
-	}
-
-	if (mdb_vread(&obj, sizeof (struct drm_gem_object), addr) == -1) {
-		mdb_warn("failed to read gem object infor");
-		ret = DCMD_ERR;
-		goto err;
 	}
 
 	if (mdb_readvar(&mdb_track, "mdb_track_enable") == -1) {
@@ -897,36 +925,48 @@ i915_obj_history(uintptr_t addr, uint_t flags, int argc, const mdb_arg_t *argv)
 	}
 
 	mdb_printf("Dump obj history\n");
+
 	mdb_printf("%s %20s %10s %10s\n", "event", "cur_seq", "last_seq",
 	    "ring addr");
-	temp = (uintptr_t)obj.his_list.next;
-	while (condition) {
-		if (mdb_vread(&node, sizeof (struct list_head), temp) == -1) {
-			mdb_warn("failed to read his_list node");
-			ret = DCMD_ERR;
-			goto err;
-		}
 
-		if (node.contain_ptr == NULL)
-			break;
-
-		if (mdb_vread(&history_node, sizeof (struct drm_history_list),
-		    (uintptr_t)node.contain_ptr) == -1) {
-			mdb_warn("failed to read history node");
-			ret = DCMD_ERR;
-			goto err;
-		}
-
-		mdb_printf("%s %-8d %-8d 0x%lx\n", history_node.info,
-		    history_node.cur_seq, history_node.last_seq,
-		    history_node.ring_ptr);
-
-		temp = (uintptr_t)node.next;
+	(void) mdb_inc_indent(2);
+	head_addr = obj_addr + OFFSETOF(struct drm_gem_object, his_list);
+	if (mdb_pwalk("head_list", i915_obj_history_wcb, NULL, head_addr) == -1) {
+		mdb_warn("failed to walk head_list");
+		ret = DCMD_ERR;
 	}
+	(void) mdb_dec_indent(2);
 
 err:
 	return (ret);
 }
+
+static int
+i915_obj_history_wcb(uintptr_t addr, const void *data, void *varg)
+{
+	struct drm_history_list history_node;
+	int ret;
+
+	/* Simulate container_of() */
+	addr -= OFFSETOF(struct drm_history_list, head);
+
+	if (mdb_vread(&history_node, sizeof (history_node), addr) == -1) {
+		mdb_warn("failed to read history node");
+		ret = WALK_ERR;
+		goto err;
+	}
+
+	mdb_printf("%s %-8d %-8d 0x%lx\n", history_node.info,
+	    history_node.cur_seq, history_node.last_seq,
+	    history_node.ring_ptr);
+
+err:
+	return (ret);
+}
+
+
+static int
+i915_batch_history_wcb(uintptr_t addr, const void *data, void *varg);
 
 void
 i915_batch_history_help(void)
@@ -943,17 +983,13 @@ i915_batch_history_help(void)
 
 /* ARGSUSED */
 static int
-i915_batch_history(uintptr_t addr, uint_t flags, int argc,
+i915_batch_history(uintptr_t batch_addr, uint_t flags, int argc,
     const mdb_arg_t *argv)
 {
-	struct list_head node;
-	uintptr_t temp;
-	struct batch_info_list batch_node;
-	caddr_t *obj_list;
-	int ret, i;
+	uintptr_t head_addr;
 	struct drm_i915_private *dev_priv;
-	int condition = 1;
 	int mdb_track = 0;
+	int ret;
 
 	dev_priv = mdb_alloc(sizeof (struct drm_i915_private), UM_SLEEP);
 
@@ -974,51 +1010,60 @@ i915_batch_history(uintptr_t addr, uint_t flags, int argc,
 	}
 
 	mdb_printf("Dump batchbuffer history\n");
-	temp = (uintptr_t)dev_priv->batch_list.next;
-	while (condition) {
 
-		if (mdb_vread(&node, sizeof (struct list_head), temp) == -1) {
-			mdb_warn("failed to read his_list node");
-			ret = DCMD_ERR;
-			goto err;
-		}
+	head_addr = i915_dev_private_addr +
+	    OFFSETOF(struct drm_i915_private, batch_list);
 
-		if (node.contain_ptr == NULL)
-			break;
-
-		if (mdb_vread(&batch_node, sizeof (struct batch_info_list),
-		    (uintptr_t)node.contain_ptr) == -1) {
-			mdb_warn("failed to read batch node");
-			ret = DCMD_ERR;
-			goto err;
-		}
-
-		mdb_printf("batch buffer includes %d objects, seqno 0x%x\n",
-		    batch_node.num, batch_node.seqno);
-
-		obj_list = mdb_alloc(batch_node.num * sizeof (caddr_t),
-		    UM_SLEEP);
-		if (mdb_vread(obj_list, batch_node.num * sizeof (caddr_t),
-		    (uintptr_t)batch_node.obj_list) == -1) {
-			mdb_warn("failed to read batch object list");
-			ret = DCMD_ERR;
-			goto err;
-		}
-
-
-		for (i = 0; i < batch_node.num; i++) {
-			mdb_printf("obj: 0x%lx\n", obj_list[i]);
-		}
-
-		mdb_free(obj_list, batch_node.num * sizeof (caddr_t));
-
-		temp = (uintptr_t)node.next;
+	(void) mdb_inc_indent(2);
+	head_addr = batch_addr + OFFSETOF(struct drm_gem_object, his_list);
+	if (mdb_pwalk("head_list", i915_batch_history_wcb, NULL, head_addr) == -1) {
+		mdb_warn("failed to walk head_list");
+		ret = DCMD_ERR;
 	}
+	(void) mdb_dec_indent(2);
 
 err:
 	mdb_free(dev_priv, sizeof (struct drm_i915_private));
 	return (ret);
 }
+
+static int
+i915_batch_history_wcb(uintptr_t addr, const void *data, void *varg)
+{
+	struct batch_info_list batch_node;
+	caddr_t *obj_list;
+	int ret, i;
+
+	/* Simulate container_of() */
+	addr -= OFFSETOF(struct batch_info_list, head);
+
+	if (mdb_vread(&batch_node, sizeof (batch_node), addr) == -1) {
+		mdb_warn("failed to read batch node");
+		ret = DCMD_ERR;
+		goto err;
+	}
+
+	mdb_printf("batch buffer includes %d objects, seqno 0x%x\n",
+	    batch_node.num, batch_node.seqno);
+
+	obj_list = mdb_alloc(batch_node.num * sizeof (caddr_t), UM_SLEEP);
+	if (mdb_vread(obj_list, batch_node.num * sizeof (caddr_t),
+	    (uintptr_t)batch_node.obj_list) == -1) {
+		mdb_warn("failed to read batch object list");
+		ret = DCMD_ERR;
+		goto err;
+	}
+
+	for (i = 0; i < batch_node.num; i++) {
+		mdb_printf("obj: 0x%lx\n", obj_list[i]);
+	}
+
+	mdb_free(obj_list, batch_node.num * sizeof (caddr_t));
+
+err:
+	return (ret);
+}
+
 
 static const char *yesno(int v)
 {
@@ -1121,31 +1166,19 @@ i915_request_list_node(uintptr_t addr, uint_t flags, int argc,
     const mdb_arg_t *argv)
 {
 	int ret = DCMD_OK;
-	struct list_head list;
 	struct drm_i915_gem_request *request;
 
 	if (!(flags & DCMD_ADDRSPEC))
 		return (DCMD_USAGE);
 
-	if (mdb_vread(&list, sizeof (struct list), addr) == -1) {
-		mdb_warn("failed to read list");
-		return (DCMD_ERR);
-	}
-
-	if (list.contain_ptr == 0) {
-		mdb_warn("no request!");
-		return (DCMD_ERR);
-	}
-
 	request = mdb_alloc(sizeof (struct drm_i915_gem_request), UM_SLEEP);
-	if (mdb_vread(request, sizeof (struct drm_i915_gem_request),
-	    (uintptr_t)list.contain_ptr) == -1) {
+	if (mdb_vread(request, sizeof (*request), addr) == -1) {
 		mdb_warn("failed to read request infor");
 		ret = DCMD_ERR;
 		goto err;
 	}
 
-	mdb_printf("0x%lx ", list.contain_ptr);
+	mdb_printf("0x%lx ", addr);
 	mdb_printf("    %d @ %ld\n", request->seqno, request->emitted_jiffies);
 
 err:
@@ -1153,32 +1186,50 @@ err:
 	return (ret);
 }
 
+/* See notes above re. container_of() */
+static int
+i915_request_list_wcb(uintptr_t addr, const void *data, void *varg)
+{
+	struct i915_wcb_arg *wa = varg;
+	int status;
+
+	/* See container_of */
+	addr -= wa->wa_list_off;
+	status = mdb_call_dcmd("i915_request_list_node", addr, 0, 0, NULL);
+
+	if (status == DCMD_USAGE || status == DCMD_ABORT)
+		return (WALK_ERR);
+	return (WALK_NEXT);
+}
+
+/*
+ * Walk a list of: struct drm_i915_gem_request
+ * addr: address of the struct intel_ring_buffer
+ *	(note: the list head is .request_list)
+ * str: heading (title)
+ * list_off (for container_of) is contant here (request.list)
+ */
 static int
 request_walk_list(uintptr_t addr, const char *str)
 {
-	struct list_head *head;
+	struct i915_wcb_arg  wcb_arg;
 	int ret = DCMD_OK;
 
-	mdb_printf("Dump %s ring request List %p\n", str, addr);
+	wcb_arg.wa_list_off = OFFSETOF(struct drm_i915_gem_request, list);
 
-	head = mdb_alloc(sizeof (struct list_head), UM_SLEEP);
-	if (mdb_vread(head, sizeof (struct list_head), addr) == -1) {
-		mdb_warn("failed to render ring request list");
-		ret = DCMD_ERR;
-		goto err;
-	}
+	mdb_printf("Dump %s ring request List from ring %p\n", str, addr);
 
-	if (mdb_pwalk_dcmd("head_list", "i915_request_list_node",
-	    0, NULL, (uintptr_t)head->prev) == -1) {
+	/* Move addr from ring to (list head) .request_list */
+	addr += OFFSETOF(struct intel_ring_buffer, request_list);
+
+	(void) mdb_inc_indent(2);
+	if (mdb_pwalk("head_list", i915_request_list_wcb, &wcb_arg, addr) == -1) {
 		mdb_warn("failed to walk request head_list");
 		ret = DCMD_ERR;
-		goto err;
 	}
+	(void) mdb_dec_indent(2);
 
-err:
-	mdb_free(head, sizeof (struct list_head));
 	return (ret);
-
 }
 
 void
@@ -1194,6 +1245,7 @@ i915_gem_request_info(uintptr_t addr, uint_t flags, int argc,
     const mdb_arg_t *argv)
 {
 	struct drm_i915_private *dev_priv;
+	uintptr_t rb_addr;
 	int ret = DCMD_OK;
 
 	if (flags & DCMD_ADDRSPEC) {
@@ -1207,18 +1259,23 @@ i915_gem_request_info(uintptr_t addr, uint_t flags, int argc,
 		goto err;
 	}
 
-	ret = request_walk_list((uintptr_t)dev_priv->ring[0].request_list.next,
-	    "RENDER");
+	rb_addr = i915_dev_private_addr +
+		OFFSETOF(struct drm_i915_private, ring[0]);
+	ret = request_walk_list(rb_addr, "RENDER");
 	if (ret != DCMD_OK) {
 		goto err;
 	}
-	ret = request_walk_list((uintptr_t)dev_priv->ring[1].request_list.next,
-	    "BSD");
+
+	rb_addr = i915_dev_private_addr +
+		OFFSETOF(struct drm_i915_private, ring[1]);
+	ret = request_walk_list(rb_addr, "BSD");
 	if (ret != DCMD_OK) {
 		goto err;
 	}
-	ret = request_walk_list((uintptr_t)dev_priv->ring[2].request_list.next,
-	    "BLT");
+
+	rb_addr = i915_dev_private_addr +
+		OFFSETOF(struct drm_i915_private, ring[2]);
+	ret = request_walk_list(rb_addr, "BLT");
 	if (ret != DCMD_OK) {
 		goto err;
 	}
