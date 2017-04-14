@@ -228,7 +228,7 @@ static int gen6_ppgtt_enable(struct drm_device *dev)
 {
 	drm_i915_private_t *dev_priv = dev->dev_private;
 	uint32_t pd_offset;
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 	struct i915_hw_ppgtt *ppgtt = dev_priv->mm.aliasing_ppgtt;
 	int i;
 

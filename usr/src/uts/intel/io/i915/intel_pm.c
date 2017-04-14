@@ -3215,7 +3215,7 @@ int intel_enable_rc6(const struct drm_device *dev)
 static void gen6_enable_rps(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 	u32 rp_state_cap;
 	u32 gt_perf_status;
 	u32 rc6vids, pcu_mbox, rc6_mask = 0;
@@ -3518,7 +3518,7 @@ out:
 static void valleyview_enable_rps(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 	u32 gtfifodbg, val;
 	int i;
 
@@ -3683,7 +3683,7 @@ static int ironlake_setup_rc6(struct drm_device *dev)
 static void ironlake_enable_rc6(struct drm_device *dev)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring = &dev_priv->ring[RCS];
+	struct intel_ring *ring = &dev_priv->ring[RCS];
 	bool was_interruptible;
 	int ret;
 

@@ -528,7 +528,7 @@ struct i915_hw_context {
 	int id;
 	bool is_initialized;
 	struct drm_i915_file_private *file_priv;
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 	struct drm_i915_gem_object *obj;
 	struct i915_ctx_hang_stats hang_stats;
 };
@@ -1038,7 +1038,7 @@ typedef struct drm_i915_private {
 	wait_queue_head_t gmbus_wait_queue;
 
 	struct drm_i915_bridge_dev bridge_dev;
-	struct intel_ring_buffer ring[I915_NUM_RINGS];
+	struct intel_ring ring[I915_NUM_RINGS];
 	uint32_t last_seqno, next_seqno;
 
 	drm_dma_handle_t *status_page_dmah;
@@ -1341,7 +1341,7 @@ struct drm_i915_gem_object {
 	 */
 	uint32_t gtt_offset;
 
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 
 	/**
 	 * Fake offset for use by mmap(2)
@@ -1386,7 +1386,7 @@ struct drm_i915_gem_object {
  */
 struct drm_i915_gem_request {
 	/** On Which ring this request was generated */
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 
 	/** GEM sequence number associated with this request. */
 	uint32_t seqno;
@@ -1694,9 +1694,9 @@ static inline void i915_gem_object_unpin_pages(struct drm_i915_gem_object *obj)
 
 int i915_mutex_lock_interruptible(struct drm_device *dev);
 int i915_gem_object_sync(struct drm_i915_gem_object *obj,
-			 struct intel_ring_buffer *to);
+			 struct intel_ring *to);
 void i915_gem_object_move_to_active(struct drm_i915_gem_object *obj,
-				    struct intel_ring_buffer *ring);
+				    struct intel_ring *ring);
 
 int i915_gem_dumb_create(struct drm_file *file_priv,
 			 struct drm_device *dev,
@@ -1740,7 +1740,7 @@ i915_gem_object_unpin_fence(struct drm_i915_gem_object *obj)
 }
 
 void i915_gem_retire_requests(struct drm_device *dev);
-void i915_gem_retire_requests_ring(struct intel_ring_buffer *ring);
+void i915_gem_retire_requests_ring(struct intel_ring *ring);
 int i915_gem_check_wedge(struct i915_gpu_error *error,
 				      bool interruptible);
 static inline bool i915_reset_in_progress(struct i915_gpu_error *error)
@@ -1767,13 +1767,13 @@ void i915_gem_init_swizzling(struct drm_device *dev);
 void i915_gem_cleanup_ringbuffer(struct drm_device *dev);
 int i915_gpu_idle(struct drm_device *dev);
 int i915_gem_idle(struct drm_device *dev, uint32_t type);
-int __i915_add_request(struct intel_ring_buffer *ring,
+int __i915_add_request(struct intel_ring *ring,
 		       struct drm_file *file,
 		       struct drm_i915_gem_object *batch_obj,
 		       u32 *seqno);
 #define i915_add_request(ring, seqno) \
 	__i915_add_request(ring, NULL, NULL, seqno)
-int i915_wait_seqno(struct intel_ring_buffer *ring,
+int i915_wait_seqno(struct intel_ring *ring,
 				 uint32_t seqno);
 void i915_gem_fault(struct drm_gem_object *obj);
 int i915_gem_object_set_to_gtt_domain(struct drm_i915_gem_object *obj,
@@ -1783,7 +1783,7 @@ i915_gem_object_set_to_cpu_domain(struct drm_i915_gem_object *obj, bool write);
 int
 i915_gem_object_pin_to_display_plane(struct drm_i915_gem_object *obj,
 				     u32 alignment,
-				     struct intel_ring_buffer *pipelined);
+				     struct intel_ring *pipelined);
 int i915_gem_attach_phys_object(struct drm_device *dev,
 				struct drm_i915_gem_object *obj,
 				int id,
@@ -1807,14 +1807,14 @@ void i915_gem_restore_fences(struct drm_device *dev);
 void i915_gem_context_init(struct drm_device *dev);
 void i915_gem_context_fini(struct drm_device *dev);
 void i915_gem_context_close(struct drm_device *dev, struct drm_file *file);
-int i915_switch_context(struct intel_ring_buffer *ring,
+int i915_switch_context(struct intel_ring *ring,
 			struct drm_file *file, int to_id);
 void i915_gem_context_free(struct kref *ctx_ref);
 void i915_gem_context_reference(struct i915_hw_context *ctx);
 void i915_gem_context_unreference(struct i915_hw_context *ctx);
 
 struct i915_ctx_hang_stats *
-i915_gem_context_get_hang_stats(struct intel_ring_buffer *ring,
+i915_gem_context_get_hang_stats(struct intel_ring *ring,
 				struct drm_file *file,
 				u32 id);
 int i915_gem_context_create_ioctl(DRM_IOCTL_ARGS);
@@ -1885,7 +1885,7 @@ void i915_gem_command_decode(uint32_t *data, int count,
 				uint32_t hw_offset, struct drm_device *dev);
 void register_dump(struct drm_device *dev);
 void gtt_dump(struct drm_device *dev);
-void ring_dump(struct drm_device *dev, struct intel_ring_buffer *ring);
+void ring_dump(struct drm_device *dev, struct intel_ring *ring);
 
 #if WATCH_LISTS
 int i915_verify_lists(struct drm_device *dev);

@@ -51,36 +51,36 @@ struct  intel_hw_status_page {
 	struct		drm_i915_gem_object *obj;
 };
 
-#define I915_READ_TAIL(ring) I915_READ(RING_TAIL((ring)->mmio_base))
-#define I915_WRITE_TAIL(ring, val) I915_WRITE(RING_TAIL((ring)->mmio_base), val)
+#define I915_READ_TAIL(engine) I915_READ(RING_TAIL((engine)->mmio_base))
+#define I915_WRITE_TAIL(engine, val) I915_WRITE(RING_TAIL((engine)->mmio_base), val)
 
-#define I915_READ_START(ring) I915_READ(RING_START((ring)->mmio_base))
-#define I915_WRITE_START(ring, val) I915_WRITE(RING_START((ring)->mmio_base), val)
+#define I915_READ_START(engine) I915_READ(RING_START((engine)->mmio_base))
+#define I915_WRITE_START(engine, val) I915_WRITE(RING_START((engine)->mmio_base), val)
 
-#define I915_READ_HEAD(ring)  I915_READ(RING_HEAD((ring)->mmio_base))
-#define I915_WRITE_HEAD(ring, val) I915_WRITE(RING_HEAD((ring)->mmio_base), val)
+#define I915_READ_HEAD(engine)  I915_READ(RING_HEAD((engine)->mmio_base))
+#define I915_WRITE_HEAD(engine, val) I915_WRITE(RING_HEAD((engine)->mmio_base), val)
 
-#define I915_READ_CTL(ring) I915_READ(RING_CTL((ring)->mmio_base))
-#define I915_WRITE_CTL(ring, val) I915_WRITE(RING_CTL((ring)->mmio_base), val)
+#define I915_READ_CTL(engine) I915_READ(RING_CTL((engine)->mmio_base))
+#define I915_WRITE_CTL(engine, val) I915_WRITE(RING_CTL((engine)->mmio_base), val)
 
-#define I915_READ_IMR(ring) I915_READ(RING_IMR((ring)->mmio_base))
-#define I915_WRITE_IMR(ring, val) I915_WRITE(RING_IMR((ring)->mmio_base), val)
+#define I915_READ_IMR(engine) I915_READ(RING_IMR((engine)->mmio_base))
+#define I915_WRITE_IMR(engine, val) I915_WRITE(RING_IMR((engine)->mmio_base), val)
 
-#define I915_READ_NOPID(ring) I915_READ(RING_NOPID((ring)->mmio_base))
-#define I915_READ_SYNC_0(ring) I915_READ(RING_SYNC_0((ring)->mmio_base))
-#define I915_READ_SYNC_1(ring) I915_READ(RING_SYNC_1((ring)->mmio_base))
+#define I915_READ_NOPID(engine) I915_READ(RING_NOPID((engine)->mmio_base))
+#define I915_READ_SYNC_0(engine) I915_READ(RING_SYNC_0((engine)->mmio_base))
+#define I915_READ_SYNC_1(engine) I915_READ(RING_SYNC_1((engine)->mmio_base))
 
-enum intel_ring_hangcheck_action { wait, active, kick, hung };
+enum intel_engine_hangcheck_action { wait, active, kick, hung };
 
-struct intel_ring_hangcheck {
+struct intel_engine_hangcheck {
 	bool deadlock;
 	u32 seqno;
 	u32 acthd;
 	int score;
-	enum intel_ring_hangcheck_action action;
+	enum intel_engine_hangcheck_action action;
 };
 
-struct  intel_ring_buffer {
+struct  intel_ring {
 	const char	*name;
 	enum intel_ring_id {
 		RCS = 0x0,
@@ -118,35 +118,35 @@ struct  intel_ring_buffer {
 	u32		irq_enable_mask;	/* bitmask to enable ring interrupt */
 	u32		trace_irq_seqno;
 	u32		sync_seqno[I915_NUM_RINGS-1];
-	bool		(*irq_get)(struct intel_ring_buffer *ring);
-	void		(*irq_put)(struct intel_ring_buffer *ring);
+	bool		(*irq_get)(struct intel_ring *ring);
+	void		(*irq_put)(struct intel_ring *ring);
 
-	int		(*init)(struct intel_ring_buffer *ring);
+	int		(*init)(struct intel_ring *ring);
 
-	void		(*write_tail)(struct intel_ring_buffer *ring,
+	void		(*write_tail)(struct intel_ring *ring,
 				      u32 value);
-	int		(*flush)(struct intel_ring_buffer *ring,
+	int		(*flush)(struct intel_ring *ring,
 				  u32	invalidate_domains,
 				  u32	flush_domains);
-	int		(*add_request)(struct intel_ring_buffer *ring);
+	int		(*add_request)(struct intel_ring *ring);
 	/* Some chipsets are not quite as coherent as advertised and need
 	 * an expensive kick to force a true read of the up-to-date seqno.
 	 * However, the up-to-date seqno is not always required and the last
 	 * seen value is good enough. Note that the seqno will always be
 	 * monotonic, even if not coherent.
 	 */
-	u32		(*get_seqno)(struct intel_ring_buffer *ring,
+	u32		(*get_seqno)(struct intel_ring *ring,
 				     bool lazy_coherency);
-	void		(*set_seqno)(struct intel_ring_buffer *ring,
+	void		(*set_seqno)(struct intel_ring *ring,
 				     u32 seqno);
-	int		(*dispatch_execbuffer)(struct intel_ring_buffer *ring,
+	int		(*dispatch_execbuffer)(struct intel_ring *ring,
 					       u32 offset, u32 length,
 					       unsigned flags);
 #define I915_DISPATCH_SECURE 0x1
 #define I915_DISPATCH_PINNED 0x2
-	void		(*cleanup)(struct intel_ring_buffer *ring);
-	int		(*sync_to)(struct intel_ring_buffer *ring,
-				   struct intel_ring_buffer *to,
+	void		(*cleanup)(struct intel_ring *ring);
+	int		(*sync_to)(struct intel_ring *ring,
+				   struct intel_ring *to,
 				   u32 seqno);
 
 	/* our mbox written by others */
@@ -189,26 +189,26 @@ struct  intel_ring_buffer {
 	struct i915_hw_context *default_context;
 	struct i915_hw_context *last_context;
 
-	struct intel_ring_hangcheck hangcheck;
+	struct intel_engine_hangcheck hangcheck;
 
 	void *private;
 };
 
 static inline bool
-intel_ring_initialized(struct intel_ring_buffer *ring)
+intel_ring_initialized(struct intel_ring *ring)
 {
 	return ring->obj != NULL;
 }
 
 static inline unsigned
-intel_ring_flag(struct intel_ring_buffer *ring)
+intel_ring_flag(struct intel_ring *ring)
 {
 	return 1 << ring->id;
 }
 
 static inline u32
-intel_ring_sync_index(struct intel_ring_buffer *ring,
-		      struct intel_ring_buffer *other)
+intel_ring_sync_index(struct intel_ring *ring,
+		      struct intel_ring *other)
 {
 	int idx;
 
@@ -226,7 +226,7 @@ intel_ring_sync_index(struct intel_ring_buffer *ring,
 }
 
 static inline u32
-intel_read_status_page(struct intel_ring_buffer *ring,
+intel_read_status_page(struct intel_ring *ring,
 		int reg)
 {
 	u32 *regs = ring->status_page.page_addr;
@@ -234,7 +234,7 @@ intel_read_status_page(struct intel_ring_buffer *ring,
 }
 
 static inline void
-intel_write_status_page(struct intel_ring_buffer *ring,
+intel_write_status_page(struct intel_ring *ring,
 			int reg, u32 value)
 {
 	u32 *regs = ring->status_page.page_addr;
@@ -260,14 +260,14 @@ intel_write_status_page(struct intel_ring_buffer *ring,
 #define I915_GEM_HWS_SCRATCH_INDEX	0x30
 #define I915_GEM_HWS_SCRATCH_ADDR (I915_GEM_HWS_SCRATCH_INDEX << MI_STORE_DWORD_INDEX_SHIFT)
 
-void intel_cleanup_ring_buffer(struct intel_ring_buffer *ring);
+void intel_cleanup_ring_buffer(struct intel_ring *ring);
 
-int intel_wait_ring_buffer(struct intel_ring_buffer *ring, int n);
-int intel_wait_ring_idle(struct intel_ring_buffer *ring);
+int intel_wait_ring_buffer(struct intel_ring *ring, int n);
+int intel_wait_ring_idle(struct intel_ring *ring);
 
-int intel_ring_begin(struct intel_ring_buffer *ring, int n);
+int intel_ring_begin(struct intel_ring *ring, int n);
 
-static inline void intel_ring_emit(struct intel_ring_buffer *ring,
+static inline void intel_ring_emit(struct intel_ring *ring,
 				   u32 data)
 {
 	unsigned int *virt = (unsigned int *)((intptr_t)ring->virtual_start + ring->tail);
@@ -275,32 +275,32 @@ static inline void intel_ring_emit(struct intel_ring_buffer *ring,
 	ring->tail += 4;
 }
 
-void intel_ring_advance(struct intel_ring_buffer *ring);
-int intel_ring_idle(struct intel_ring_buffer *ring);
-void intel_ring_init_seqno(struct intel_ring_buffer *ring, u32 seqno);
-int intel_ring_flush_all_caches(struct intel_ring_buffer *ring);
-int intel_ring_invalidate_all_caches(struct intel_ring_buffer *ring);
+void intel_ring_advance(struct intel_ring *ring);
+int intel_ring_idle(struct intel_ring *ring);
+void intel_ring_init_seqno(struct intel_ring *ring, u32 seqno);
+int intel_ring_flush_all_caches(struct intel_ring *ring);
+int intel_ring_invalidate_all_caches(struct intel_ring *ring);
 
 int intel_init_render_ring_buffer(struct drm_device *dev);
 int intel_init_bsd_ring_buffer(struct drm_device *dev);
 int intel_init_blt_ring_buffer(struct drm_device *dev);
 int intel_init_vebox_ring_buffer(struct drm_device *dev);
 
-u32 intel_ring_get_active_head(struct intel_ring_buffer *ring);
-void intel_ring_setup_status_page(struct intel_ring_buffer *ring);
+u32 intel_ring_get_active_head(struct intel_ring *ring);
+void intel_ring_setup_status_page(struct intel_ring *ring);
 
-static inline u32 intel_ring_get_tail(struct intel_ring_buffer *ring)
+static inline u32 intel_ring_get_tail(struct intel_ring *ring)
 {
 	return ring->tail;
 }
 
-static inline u32 intel_ring_get_seqno(struct intel_ring_buffer *ring)
+static inline u32 intel_ring_get_seqno(struct intel_ring *ring)
 {
 	BUG_ON(ring->outstanding_lazy_request == 0);
 	return ring->outstanding_lazy_request;
 }
 
-static inline void i915_trace_irq_get(struct intel_ring_buffer *ring, u32 seqno)
+static inline void i915_trace_irq_get(struct intel_ring *ring, u32 seqno)
 {
 	if (ring->trace_irq_seqno == 0 && ring->irq_get(ring))
 		ring->trace_irq_seqno = seqno;

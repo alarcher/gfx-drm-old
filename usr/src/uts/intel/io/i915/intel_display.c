@@ -1769,7 +1769,7 @@ static bool need_vtd_wa(struct drm_device *dev)
 int
 intel_pin_and_fence_fb_obj(struct drm_device *dev,
 			   struct drm_i915_gem_object *obj,
-			   struct intel_ring_buffer *pipelined)
+			   struct intel_ring *pipelined)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	u32 alignment;
@@ -7148,7 +7148,7 @@ void intel_mark_idle(struct drm_device *dev)
 }
 
 void intel_mark_fb_busy(struct drm_i915_gem_object *obj,
-			struct intel_ring_buffer *ring)
+			struct intel_ring *ring)
 {
 	struct drm_device *dev = obj->base.dev;
 	struct drm_crtc *crtc;
@@ -7300,7 +7300,7 @@ static int intel_gen2_queue_flip(struct drm_device *dev,
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 	u32 flip_mask;
-	struct intel_ring_buffer *ring = &dev_priv->ring[RCS];
+	struct intel_ring *ring = &dev_priv->ring[RCS];
 	int ret;
 
 	ret = intel_pin_and_fence_fb_obj(dev, obj, ring);
@@ -7344,7 +7344,7 @@ static int intel_gen3_queue_flip(struct drm_device *dev,
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 	u32 flip_mask;
-	struct intel_ring_buffer *ring = &dev_priv->ring[RCS];
+	struct intel_ring *ring = &dev_priv->ring[RCS];
 	int ret;
 
 	ret = intel_pin_and_fence_fb_obj(dev, obj, ring);
@@ -7385,7 +7385,7 @@ static int intel_gen4_queue_flip(struct drm_device *dev,
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
 	uint32_t pf, pipesrc;
-	struct intel_ring_buffer *ring = &dev_priv->ring[RCS];
+	struct intel_ring *ring = &dev_priv->ring[RCS];
 	int ret;
 
 	ret = intel_pin_and_fence_fb_obj(dev, obj, ring);
@@ -7432,7 +7432,7 @@ static int intel_gen6_queue_flip(struct drm_device *dev,
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
-	struct intel_ring_buffer *ring = &dev_priv->ring[RCS];
+	struct intel_ring *ring = &dev_priv->ring[RCS];
 	uint32_t pf, pipesrc;
 	int ret;
 
@@ -7482,7 +7482,7 @@ static int intel_gen7_queue_flip(struct drm_device *dev,
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 	struct intel_crtc *intel_crtc = to_intel_crtc(crtc);
-	struct intel_ring_buffer *ring = &dev_priv->ring[BCS];
+	struct intel_ring *ring = &dev_priv->ring[BCS];
 	uint32_t plane_bit = 0;
 	int ret;
 

@@ -330,7 +330,7 @@ static int context_idr_cleanup(int id, void *p, void *data)
 }
 
 struct i915_ctx_hang_stats *
-i915_gem_context_get_hang_stats(struct intel_ring_buffer *ring,
+i915_gem_context_get_hang_stats(struct intel_ring *ring,
 				struct drm_file *file,
 				u32 id)
 {
@@ -374,7 +374,7 @@ i915_gem_context_get(struct drm_i915_file_private *file_priv, u32 id)
 }
 
 static inline int
-mi_set_context(struct intel_ring_buffer *ring,
+mi_set_context(struct intel_ring *ring,
 	       struct i915_hw_context *new_context,
 	       u32 hw_flags)
 {
@@ -423,7 +423,7 @@ mi_set_context(struct intel_ring_buffer *ring,
 
 static int do_switch(struct i915_hw_context *to)
 {
-	struct intel_ring_buffer *ring = to->ring;
+	struct intel_ring *ring = to->ring;
 	struct i915_hw_context *from = ring->last_context;
 	u32 hw_flags = 0;
 	int ret;
@@ -519,7 +519,7 @@ static int do_switch(struct i915_hw_context *to)
  * it will have a refoucnt > 1. This allows us to destroy the context abstract
  * object while letting the normal object tracking destroy the backing BO.
  */
-int i915_switch_context(struct intel_ring_buffer *ring,
+int i915_switch_context(struct intel_ring *ring,
 			struct drm_file *file,
 			int to_id)
 {

@@ -563,7 +563,7 @@ extern void intel_dvo_init(struct drm_device *dev);
 extern void intel_tv_init(struct drm_device *dev);
 extern void intel_mark_busy(struct drm_device *dev);
 extern void intel_mark_fb_busy(struct drm_i915_gem_object *obj,
-			       struct intel_ring_buffer *ring);
+			       struct intel_ring *ring);
 extern void intel_mark_idle(struct drm_device *dev);
 extern void intel_lvds_init(struct drm_device *dev);
 extern bool intel_is_dual_link_lvds(struct drm_device *dev);
@@ -702,7 +702,7 @@ extern void intel_enable_clock_gating(struct drm_device *dev);
 
 extern int intel_pin_and_fence_fb_obj(struct drm_device *dev,
 				      struct drm_i915_gem_object *obj,
-				      struct intel_ring_buffer *pipelined);
+				      struct intel_ring *pipelined);
 extern void intel_unpin_fb_obj(struct drm_i915_gem_object *obj);
 
 extern int intel_framebuffer_init(struct drm_device *dev,

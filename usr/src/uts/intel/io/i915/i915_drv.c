@@ -847,7 +847,7 @@ int i915_reset(struct drm_device *dev)
 	 */
 	if (drm_core_check_feature(dev, DRIVER_MODESET) ||
 	    !dev_priv->mm.suspended) {
-		struct intel_ring_buffer *ring;
+		struct intel_ring *ring;
 		int i;
 
 		dev_priv->mm.suspended = 0;

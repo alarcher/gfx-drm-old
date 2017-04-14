@@ -647,7 +647,7 @@ static void ironlake_handle_rps_change(struct drm_device *dev)
 }
 
 static void notify_ring(struct drm_device *dev,
-			struct intel_ring_buffer *ring)
+			struct intel_ring *ring)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
@@ -1368,7 +1368,7 @@ static void i915_error_work_func(struct work_struct *work)
 	drm_i915_private_t *dev_priv = container_of(error, drm_i915_private_t,
 						    gpu_error);
 	struct drm_device *dev = dev_priv->dev;
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 	/* LINTED */
 	char *error_event[] = { "ERROR=1", NULL };
 	/* LINTED */
@@ -1660,7 +1660,7 @@ static void i915_gem_record_fences(struct drm_device *dev,
 
 static struct drm_i915_error_object *
 i915_error_first_batchbuffer(struct drm_i915_private *dev_priv,
-			     struct intel_ring_buffer *ring)
+			     struct intel_ring *ring)
 {
 	struct drm_i915_gem_object *obj;
 	u32 seqno;
@@ -1702,7 +1702,7 @@ i915_error_first_batchbuffer(struct drm_i915_private *dev_priv,
 
 static void i915_record_ring_state(struct drm_device *dev,
 				   struct drm_i915_error_state *error,
-				   struct intel_ring_buffer *ring)
+				   struct intel_ring *ring)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
@@ -1745,7 +1745,7 @@ static void i915_record_ring_state(struct drm_device *dev,
 }
 
 
-static void i915_gem_record_active_context(struct intel_ring_buffer *ring,
+static void i915_gem_record_active_context(struct intel_ring *ring,
 					   struct drm_i915_error_state *error,
 					   struct drm_i915_error_ring *ering)
 {
@@ -1768,7 +1768,7 @@ static void i915_gem_record_rings(struct drm_device *dev,
 				  struct drm_i915_error_state *error)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 	struct drm_i915_gem_request *request;
 	int i, count;
 
@@ -2079,7 +2079,7 @@ static void i915_report_and_clear_eir(struct drm_device *dev)
 void i915_handle_error(struct drm_device *dev, bool wedged)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 	int i;
 
 	i915_capture_error_state(dev);
@@ -2286,7 +2286,7 @@ static void valleyview_disable_vblank(struct drm_device *dev, int pipe)
 }
 
 static u32
-ring_last_seqno(struct intel_ring_buffer *ring)
+ring_last_seqno(struct intel_ring *ring)
 {
 	struct drm_i915_gem_request *last_req;
 	last_req = list_entry(ring->request_list.prev,
@@ -2295,14 +2295,14 @@ ring_last_seqno(struct intel_ring_buffer *ring)
 }
 
 static bool
-ring_idle(struct intel_ring_buffer *ring, u32 seqno)
+ring_idle(struct intel_ring *ring, u32 seqno)
 {
 	return (list_empty(&ring->request_list) ||
 		i915_seqno_passed(seqno, ring_last_seqno(ring)));
 }
 
-static struct intel_ring_buffer *
-semaphore_waits_for(struct intel_ring_buffer *ring, u32 *seqno)
+static struct intel_ring *
+semaphore_waits_for(struct intel_ring *ring, u32 *seqno)
 {
 	struct drm_i915_private *dev_priv = ring->dev->dev_private;
 	u32 cmd, ipehr, acthd, acthd_min;
@@ -2334,10 +2334,10 @@ semaphore_waits_for(struct intel_ring_buffer *ring, u32 *seqno)
 	return &dev_priv->ring[(ring->id + (((ipehr >> 17) & 1) + 1)) % 3];
 }
 
-static int semaphore_passed(struct intel_ring_buffer *ring)
+static int semaphore_passed(struct intel_ring *ring)
 {
 	struct drm_i915_private *dev_priv = ring->dev->dev_private;
-	struct intel_ring_buffer *signaller;
+	struct intel_ring *signaller;
 	u32 seqno, ctl;
 
 	ring->hangcheck.deadlock = true;
@@ -2356,15 +2356,15 @@ static int semaphore_passed(struct intel_ring_buffer *ring)
 
 static void semaphore_clear_deadlocks(struct drm_i915_private *dev_priv)
 {
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 	int i;
 
 	for_each_ring(ring, dev_priv, i)
 		ring->hangcheck.deadlock = false;
 }
 
-static enum intel_ring_hangcheck_action
-ring_stuck(struct intel_ring_buffer *ring, u32 acthd)
+static enum intel_engine_hangcheck_action
+ring_stuck(struct intel_ring *ring, u32 acthd)
 {
 	struct drm_device *dev = ring->dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
@@ -2418,7 +2418,7 @@ void i915_hangcheck_elapsed(void* data)
 {
 	struct drm_device *dev = (struct drm_device *)data;
 	drm_i915_private_t *dev_priv = dev->dev_private;
-	struct intel_ring_buffer *ring;
+	struct intel_ring *ring;
 	int i;
 	int busy_count = 0, rings_hung = 0;
 	bool stuck[I915_NUM_RINGS] = { 0 };

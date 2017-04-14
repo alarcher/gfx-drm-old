@@ -867,7 +867,7 @@ void gpu_top_handler(void *data)
 */
 }
 
-void ring_dump(struct drm_device *dev, struct intel_ring_buffer *ring)
+void ring_dump(struct drm_device *dev, struct intel_ring *ring)
 {
 	struct drm_i915_private *dev_priv = dev->dev_private;
 
