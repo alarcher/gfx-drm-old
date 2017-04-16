@@ -2583,7 +2583,7 @@ intel_dp_detect(struct drm_connector *connector, bool force)
 	}
 
 	if (intel_encoder->type != INTEL_OUTPUT_EDP)
-		intel_encoder->type = INTEL_OUTPUT_DISPLAYPORT;
+		intel_encoder->type = INTEL_OUTPUT_DP;
 	return connector_status_connected;
 }
 
@@ -2796,7 +2796,7 @@ intel_trans_dp_port_sel (struct drm_crtc *crtc)
 	for_each_encoder_on_crtc(dev, crtc, intel_encoder) {
 		intel_dp = enc_to_intel_dp(&intel_encoder->base);
 
-		if (intel_encoder->type == INTEL_OUTPUT_DISPLAYPORT ||
+		if (intel_encoder->type == INTEL_OUTPUT_DP ||
 		    intel_encoder->type == INTEL_OUTPUT_EDP)
 			return intel_dp->output_reg;
 	}
@@ -3252,7 +3252,7 @@ intel_dp_init(struct drm_device *dev, int output_reg, enum port port)
 	intel_dig_port->port = port;
 	intel_dig_port->dp.output_reg = output_reg;
 
-	intel_encoder->type = INTEL_OUTPUT_DISPLAYPORT;
+	intel_encoder->type = INTEL_OUTPUT_DP;
 	intel_encoder->crtc_mask = (1 << 0) | (1 << 1) | (1 << 2);
 	intel_encoder->cloneable = false;
 	intel_encoder->hot_plug = intel_dp_hot_plug;

@@ -2970,7 +2970,7 @@ static void ironlake_pch_enable(struct drm_crtc *crtc)
 
 	/* For PCH DP, enable TRANS_DP_CTL */
 	if (HAS_PCH_CPT(dev) &&
-	    (intel_pipe_has_type(crtc, INTEL_OUTPUT_DISPLAYPORT) ||
+	    (intel_pipe_has_type(crtc, INTEL_OUTPUT_DP) ||
 	     intel_pipe_has_type(crtc, INTEL_OUTPUT_EDP))) {
 		u32 bpc = (I915_READ(PIPECONF(pipe)) & PIPECONF_BPC_MASK) >> 5;
 		reg = TRANS_DP_CTL(pipe);
@@ -4465,7 +4465,7 @@ static void vlv_update_pll(struct intel_crtc *crtc)
 				 0x00d0000f);
 
 	if (intel_pipe_has_type(&crtc->base, INTEL_OUTPUT_EDP) ||
-	    intel_pipe_has_type(&crtc->base, INTEL_OUTPUT_DISPLAYPORT)) {
+	    intel_pipe_has_type(&crtc->base, INTEL_OUTPUT_DP)) {
 		/* Use SSC source */
 		if (!pipe)
 			vlv_dpio_write(dev_priv, DPIO_REFSFR(pipe),
@@ -4485,7 +4485,7 @@ static void vlv_update_pll(struct intel_crtc *crtc)
 
 	coreclk = vlv_dpio_read(dev_priv, DPIO_CORE_CLK(pipe));
 	coreclk = (coreclk & 0x0000ff00) | 0x01c00000;
-	if (intel_pipe_has_type(&crtc->base, INTEL_OUTPUT_DISPLAYPORT) ||
+	if (intel_pipe_has_type(&crtc->base, INTEL_OUTPUT_DP) ||
 	    intel_pipe_has_type(&crtc->base, INTEL_OUTPUT_EDP))
 		coreclk |= 0x01000000;
 	vlv_dpio_write(dev_priv, DPIO_CORE_CLK(pipe), coreclk);
@@ -4553,7 +4553,7 @@ static void i9xx_update_pll(struct intel_crtc *crtc,
 	if (is_sdvo)
 		dpll |= DPLL_DVO_HIGH_SPEED;
 
-	if (intel_pipe_has_type(&crtc->base, INTEL_OUTPUT_DISPLAYPORT))
+	if (intel_pipe_has_type(&crtc->base, INTEL_OUTPUT_DP))
 		dpll |= DPLL_DVO_HIGH_SPEED;
 
 	/* compute bitmask from p1 value */
@@ -6220,7 +6220,7 @@ static void haswell_write_eld(struct drm_connector *connector,
 	eldv = AUDIO_ELD_VALID_A << (pipe * 4);
 	intel_crtc->eld_vld = true;
 
-	if (intel_pipe_has_type(crtc, INTEL_OUTPUT_DISPLAYPORT)) {
+	if (intel_pipe_has_type(crtc, INTEL_OUTPUT_DP)) {
 		DRM_DEBUG_DRIVER("ELD: DisplayPort detected\n");
 		eld[5] |= (1 << 2);	/* Conn_Type, 0x1 = DisplayPort */
 		I915_WRITE(aud_config, AUD_CONFIG_N_VALUE_INDEX); /* 0x1 = DP */
@@ -6298,7 +6298,7 @@ static void ironlake_write_eld(struct drm_connector *connector,
 		eldv = IBX_ELD_VALIDB << ((i - 1) * 4);
 	}
 
-	if (intel_pipe_has_type(crtc, INTEL_OUTPUT_DISPLAYPORT)) {
+	if (intel_pipe_has_type(crtc, INTEL_OUTPUT_DP)) {
 		DRM_DEBUG_DRIVER("ELD: DisplayPort detected\n");
 		eld[5] |= (1 << 2);	/* Conn_Type, 0x1 = DisplayPort */
 		I915_WRITE(aud_config, AUD_CONFIG_N_VALUE_INDEX); /* 0x1 = DP */
