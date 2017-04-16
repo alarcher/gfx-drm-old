@@ -1339,7 +1339,7 @@ static int intel_init_ring_buffer(struct drm_device *dev,
 		goto err_unpin;
 	}
 
-	ring->virtual_start = ring->map.handle;
+	ring->vaddr = ring->map.handle;
 	ret = ring->init(ring);
 	if (ret)
 		goto err_unmap;
@@ -1519,7 +1519,7 @@ static int intel_wrap_ring_buffer(struct intel_ring *ring)
 			return ret;
 	}
 
-	virt = (unsigned int *)(uintptr_t)((caddr_t)ring->virtual_start + ring->tail);
+	virt = (unsigned int *)(uintptr_t)((caddr_t)ring->vaddr + ring->tail);
 	rem = (int)(rem / 4);
 	while (rem--) {
 		*virt++ = MI_NOOP;
@@ -1925,7 +1925,7 @@ int intel_render_ring_init_dri(struct drm_device *dev, u64 start, u32 size)
 		return -ENOMEM;
 	}
 
-	ring->virtual_start = (void *)ring->map.handle;
+	ring->vaddr = (void *)ring->map.handle;
 
 	if (!I915_NEED_GFX_HWS(dev)) {
 		ret = init_phys_status_page(ring);

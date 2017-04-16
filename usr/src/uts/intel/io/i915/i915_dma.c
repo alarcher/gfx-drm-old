@@ -231,7 +231,7 @@ static int i915_dma_resume(struct drm_device * dev)
 
 	DRM_DEBUG_DRIVER("%s\n", __func__);
 
-	if (ring->virtual_start == NULL) {
+	if (ring->vaddr == NULL) {
 		DRM_ERROR("can not ioremap virtual address for"
 			  " ring buffer\n");
 		return -ENOMEM;
@@ -814,7 +814,7 @@ int i915_irq_emit(DRM_IOCTL_ARGS)
 	if (drm_core_check_feature(dev, DRIVER_MODESET))
 		return -ENODEV;
 
-	if (!dev_priv || !LP_RING(dev_priv)->virtual_start) {
+	if (!dev_priv || !LP_RING(dev_priv)->vaddr) {
 		DRM_ERROR("called with no initialization\n");
 		return -EINVAL;
 	}

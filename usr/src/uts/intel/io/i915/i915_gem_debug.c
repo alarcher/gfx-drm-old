@@ -886,7 +886,7 @@ void ring_dump(struct drm_device *dev, struct intel_ring *ring)
 			return;
 
 		for (int i = 0; i < 200; i++) {
-			virt = (unsigned int *)((intptr_t)ring->virtual_start + head + (i-180)*4);
+			virt = (unsigned int *)((intptr_t)ring->vaddr + head + (i-180)*4);
 			DRM_ERROR("%s[0x%x]: 0x%x", ring->name, head + (i-180)*4, virt[0]);
 		}
 

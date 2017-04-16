@@ -90,7 +90,7 @@ struct  intel_ring {
 	} id;
 #define I915_NUM_RINGS 4
 	u32		mmio_base;
-	void		*virtual_start;
+	void		*vaddr;
 	struct		drm_device *dev;
 	struct		drm_i915_gem_object *obj;
 
@@ -272,7 +272,7 @@ int intel_ring_begin(struct intel_ring *ring, int n);
 static inline void intel_ring_emit(struct intel_ring *ring,
 				   u32 data)
 {
-	unsigned int *virt = (unsigned int *)((intptr_t)ring->virtual_start + ring->tail);
+	unsigned int *virt = (unsigned int *)((intptr_t)ring->vaddr + ring->tail);
 	*virt = data;
 	ring->tail += 4;
 }

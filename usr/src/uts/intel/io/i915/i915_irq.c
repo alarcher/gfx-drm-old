@@ -2319,7 +2319,7 @@ semaphore_waits_for(struct intel_ring *ring, u32 *seqno)
 	acthd = intel_ring_get_active_head(ring) & HEAD_ADDR;
 	acthd_min = max((int)acthd - 3 * 4, 0);
 	do {
-		tmp = (u32 *)((intptr_t)ring->virtual_start + acthd);
+		tmp = (u32 *)((intptr_t)ring->vaddr + acthd);
 		cmd = *tmp;
 		if (cmd == ipehr)
 			break;
@@ -2329,7 +2329,7 @@ semaphore_waits_for(struct intel_ring *ring, u32 *seqno)
 			return NULL;
 	} while (1);
 
-	tmp = (u32 *)((intptr_t)ring->virtual_start + acthd + 4 );
+	tmp = (u32 *)((intptr_t)ring->vaddr + acthd + 4 );
 	*seqno = *tmp+1;
 	return &dev_priv->ring[(ring->id + (((ipehr >> 17) & 1) + 1)) % 3];
 }
