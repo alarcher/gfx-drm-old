@@ -635,7 +635,7 @@ intel_dp_i2c_init(struct intel_dp *intel_dp,
 
 static void
 intel_dp_set_clock(struct intel_encoder *encoder,
-		   struct intel_crtc_config *pipe_config, int link_bw)
+		   struct intel_crtc_state *pipe_config, int link_bw)
 {
 	struct drm_device *dev = encoder->base.dev;
 
@@ -678,7 +678,7 @@ intel_dp_set_clock(struct intel_encoder *encoder,
 
 bool
 intel_dp_compute_config(struct intel_encoder *encoder,
-			struct intel_crtc_config *pipe_config)
+			struct intel_crtc_state *pipe_config)
 {
 	struct drm_device *dev = encoder->base.dev;
 	struct drm_i915_private *dev_priv = dev->dev_private;
@@ -1340,7 +1340,7 @@ static bool intel_dp_get_hw_state(struct intel_encoder *encoder,
 }
 
 static void intel_dp_get_config(struct intel_encoder *encoder,
-				struct intel_crtc_config *pipe_config)
+				struct intel_crtc_state *pipe_config)
 {
 	struct intel_dp *intel_dp = enc_to_intel_dp(&encoder->base);
 	u32 tmp, flags = 0;

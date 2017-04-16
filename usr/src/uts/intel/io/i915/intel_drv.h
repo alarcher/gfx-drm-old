@@ -109,7 +109,7 @@ struct intel_encoder {
 	bool connectors_active;
 	void (*hot_plug)(struct intel_encoder *);
 	bool (*compute_config)(struct intel_encoder *,
-			       struct intel_crtc_config *);
+			       struct intel_crtc_state *);
 	void (*pre_pll_enable)(struct intel_encoder *);
 	void (*pre_enable)(struct intel_encoder *);
 	void (*enable)(struct intel_encoder *);
@@ -125,7 +125,7 @@ struct intel_encoder {
 	 * pre-filled the pipe config. Note that intel_encoder->base.crtc must
 	 * be set correctly before calling this function. */
 	void (*get_config)(struct intel_encoder *,
-			   struct intel_crtc_config *pipe_config);
+			   struct intel_crtc_state *pipe_config);
 	int crtc_mask;
 	enum hpd_pin hpd_pin;
 };
@@ -175,7 +175,7 @@ typedef struct dpll {
 	int	p;
 } intel_clock_t;
 
-struct intel_crtc_config {
+struct intel_crtc_state {
 	/**
 	 * quirks - bitfield with hw state readout quirks
 	 *
@@ -302,7 +302,7 @@ struct intel_crtc {
 	int16_t cursor_width, cursor_height;
 	bool cursor_visible;
 
-	struct intel_crtc_config config;
+	struct intel_crtc_state config;
 
 	uint32_t ddi_pll_sel;
 
@@ -555,7 +555,7 @@ extern void intel_hdmi_init_connector(struct intel_digital_port *intel_dig_port,
 				      struct intel_connector *intel_connector);
 extern struct intel_hdmi *enc_to_intel_hdmi(struct drm_encoder *encoder);
 extern bool intel_hdmi_compute_config(struct intel_encoder *encoder,
-				      struct intel_crtc_config *pipe_config);
+				      struct intel_crtc_state *pipe_config);
 extern void intel_dip_infoframe_csum(struct dip_infoframe *avi_if);
 extern bool intel_sdvo_init(struct drm_device *dev, uint32_t sdvo_reg,
 			    bool is_sdvob);
@@ -579,7 +579,7 @@ extern void intel_dp_sink_dpms(struct intel_dp *intel_dp, int mode);
 extern void intel_dp_encoder_destroy(struct drm_encoder *encoder);
 extern void intel_dp_check_link_status(struct intel_dp *intel_dp);
 extern bool intel_dp_compute_config(struct intel_encoder *encoder,
-				    struct intel_crtc_config *pipe_config);
+				    struct intel_crtc_state *pipe_config);
 extern bool intel_dpd_is_edp(struct drm_device *dev);
 extern void ironlake_edp_backlight_on(struct intel_dp *intel_dp);
 extern void ironlake_edp_backlight_off(struct intel_dp *intel_dp);
@@ -599,10 +599,10 @@ extern void intel_panel_fini(struct intel_panel *panel);
 extern void intel_fixed_panel_mode(struct drm_display_mode *fixed_mode,
 				   struct drm_display_mode *adjusted_mode);
 extern void intel_pch_panel_fitting(struct intel_crtc *crtc,
-				    struct intel_crtc_config *pipe_config,
+				    struct intel_crtc_state *pipe_config,
 				    int fitting_mode);
 extern void intel_gmch_panel_fitting(struct intel_crtc *crtc,
-				     struct intel_crtc_config *pipe_config,
+				     struct intel_crtc_state *pipe_config,
 				     int fitting_mode);
 extern void intel_panel_set_backlight(struct drm_device *dev,
 				      u32 level, u32 max);

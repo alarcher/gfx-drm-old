@@ -56,7 +56,7 @@ intel_fixed_panel_mode(struct drm_display_mode *fixed_mode,
 /* adjusted_mode has been preset to be the panel's fixed mode */
 void
 intel_pch_panel_fitting(struct intel_crtc *intel_crtc,
-			struct intel_crtc_config *pipe_config,
+			struct intel_crtc_state *pipe_config,
 			int fitting_mode)
 {
 	struct drm_display_mode *mode, *adjusted_mode;
@@ -180,7 +180,7 @@ static inline u32 panel_fitter_scaling(u32 source, u32 target)
 }
 
 void intel_gmch_panel_fitting(struct intel_crtc *intel_crtc,
-			      struct intel_crtc_config *pipe_config,
+			      struct intel_crtc_state *pipe_config,
 			      int fitting_mode)
 {
 	struct drm_device *dev = intel_crtc->base.dev;

@@ -672,7 +672,7 @@ static bool intel_hdmi_get_hw_state(struct intel_encoder *encoder,
 }
 
 static void intel_hdmi_get_config(struct intel_encoder *encoder,
-				  struct intel_crtc_config *pipe_config)
+				  struct intel_crtc_state *pipe_config)
 {
 	struct intel_hdmi *intel_hdmi = enc_to_intel_hdmi(&encoder->base);
 	struct drm_i915_private *dev_priv = encoder->base.dev->dev_private;
@@ -825,7 +825,7 @@ static int intel_hdmi_mode_valid(struct drm_connector *connector,
 }
 
 bool intel_hdmi_compute_config(struct intel_encoder *encoder,
-			       struct intel_crtc_config *pipe_config)
+			       struct intel_crtc_state *pipe_config)
 {
 	struct intel_hdmi *intel_hdmi = enc_to_intel_hdmi(&encoder->base);
 	struct drm_device *dev = encoder->base.dev;

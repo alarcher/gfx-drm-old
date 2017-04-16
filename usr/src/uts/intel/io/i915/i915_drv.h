@@ -335,7 +335,7 @@ struct drm_i915_error_state {
 	struct intel_display_error_state *display;
 };
 
-struct intel_crtc_config;
+struct intel_crtc_state;
 struct intel_crtc;
 struct intel_limit;
 struct dpll;
@@ -372,7 +372,7 @@ struct drm_i915_display_funcs {
 	/* Returns the active state of the crtc, and if the crtc is active,
 	 * fills out the pipe-config with the hw state. */
 	bool (*get_pipe_config)(struct intel_crtc *,
-				struct intel_crtc_config *);
+				struct intel_crtc_state *);
 	int (*crtc_mode_set)(struct drm_crtc *crtc,
 			     int x, int y,
 			     struct drm_framebuffer *old_fb);

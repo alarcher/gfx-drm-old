@@ -1270,7 +1270,7 @@ static void intel_ddi_hot_plug(struct intel_encoder *intel_encoder)
 }
 
 static void intel_ddi_get_config(struct intel_encoder *encoder,
-				 struct intel_crtc_config *pipe_config)
+				 struct intel_crtc_state *pipe_config)
 {
 	struct drm_i915_private *dev_priv = encoder->base.dev->dev_private;
 	struct intel_crtc *intel_crtc = to_intel_crtc(encoder->base.crtc);
@@ -1297,7 +1297,7 @@ static void intel_ddi_destroy(struct drm_encoder *encoder)
 }
 
 static bool intel_ddi_compute_config(struct intel_encoder *encoder,
-				     struct intel_crtc_config *pipe_config)
+				     struct intel_crtc_state *pipe_config)
 {
 	int type = encoder->type;
 	int port = intel_ddi_get_encoder_port(encoder);
