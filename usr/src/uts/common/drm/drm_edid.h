@@ -215,6 +215,7 @@ struct detailed_timing {
 #define DRM_EDID_FEATURE_DEFAULT_GTF      (1 << 0)
 #define DRM_EDID_FEATURE_PREFERRED_TIMING (1 << 1)
 #define DRM_EDID_FEATURE_STANDARD_COLOR   (1 << 2)
+/* If analog */
 #define DRM_EDID_FEATURE_DISPLAY_TYPE     (3 << 3) /* 00=mono, 01=rgb, 10=non-rgb, 11=unknown */
 /* If digital */
 #define DRM_EDID_FEATURE_COLOR_MASK	  (3 << 3)
@@ -226,6 +227,77 @@ struct detailed_timing {
 #define DRM_EDID_FEATURE_PM_ACTIVE_OFF    (1 << 5)
 #define DRM_EDID_FEATURE_PM_SUSPEND       (1 << 6)
 #define DRM_EDID_FEATURE_PM_STANDBY       (1 << 7)
+
+#define DRM_EDID_HDMI_DC_48               (1 << 6)
+#define DRM_EDID_HDMI_DC_36               (1 << 5)
+#define DRM_EDID_HDMI_DC_30               (1 << 4)
+#define DRM_EDID_HDMI_DC_Y444             (1 << 3)
+
+/* YCBCR 420 deep color modes */
+#define DRM_EDID_YCBCR420_DC_48		  (1 << 6)
+#define DRM_EDID_YCBCR420_DC_36		  (1 << 5)
+#define DRM_EDID_YCBCR420_DC_30		  (1 << 4)
+#define DRM_EDID_YCBCR420_DC_MASK (DRM_EDID_YCBCR420_DC_48 | \
+				    DRM_EDID_YCBCR420_DC_36 | \
+				    DRM_EDID_YCBCR420_DC_30)
+
+/* ELD Header Block */
+#define DRM_ELD_HEADER_BLOCK_SIZE	4
+
+#define DRM_ELD_VER			0
+# define DRM_ELD_VER_SHIFT		3
+# define DRM_ELD_VER_MASK		(0x1f << 3)
+# define DRM_ELD_VER_CEA861D		(2 << 3) /* supports 861D or below */
+# define DRM_ELD_VER_CANNED		(0x1f << 3)
+
+#define DRM_ELD_BASELINE_ELD_LEN	2	/* in dwords! */
+
+/* ELD Baseline Block for ELD_Ver == 2 */
+#define DRM_ELD_CEA_EDID_VER_MNL	4
+# define DRM_ELD_CEA_EDID_VER_SHIFT	5
+# define DRM_ELD_CEA_EDID_VER_MASK	(7 << 5)
+# define DRM_ELD_CEA_EDID_VER_NONE	(0 << 5)
+# define DRM_ELD_CEA_EDID_VER_CEA861	(1 << 5)
+# define DRM_ELD_CEA_EDID_VER_CEA861A	(2 << 5)
+# define DRM_ELD_CEA_EDID_VER_CEA861BCD	(3 << 5)
+# define DRM_ELD_MNL_SHIFT		0
+# define DRM_ELD_MNL_MASK		(0x1f << 0)
+
+#define DRM_ELD_SAD_COUNT_CONN_TYPE	5
+# define DRM_ELD_SAD_COUNT_SHIFT	4
+# define DRM_ELD_SAD_COUNT_MASK		(0xf << 4)
+# define DRM_ELD_CONN_TYPE_SHIFT	2
+# define DRM_ELD_CONN_TYPE_MASK		(3 << 2)
+# define DRM_ELD_CONN_TYPE_HDMI		(0 << 2)
+# define DRM_ELD_CONN_TYPE_DP		(1 << 2)
+# define DRM_ELD_SUPPORTS_AI		(1 << 1)
+# define DRM_ELD_SUPPORTS_HDCP		(1 << 0)
+
+#define DRM_ELD_AUD_SYNCH_DELAY		6	/* in units of 2 ms */
+# define DRM_ELD_AUD_SYNCH_DELAY_MAX	0xfa	/* 500 ms */
+
+#define DRM_ELD_SPEAKER			7
+# define DRM_ELD_SPEAKER_MASK		0x7f
+# define DRM_ELD_SPEAKER_RLRC		(1 << 6)
+# define DRM_ELD_SPEAKER_FLRC		(1 << 5)
+# define DRM_ELD_SPEAKER_RC		(1 << 4)
+# define DRM_ELD_SPEAKER_RLR		(1 << 3)
+# define DRM_ELD_SPEAKER_FC		(1 << 2)
+# define DRM_ELD_SPEAKER_LFE		(1 << 1)
+# define DRM_ELD_SPEAKER_FLR		(1 << 0)
+
+#define DRM_ELD_PORT_ID			8	/* offsets 8..15 inclusive */
+# define DRM_ELD_PORT_ID_LEN		8
+
+#define DRM_ELD_MANUFACTURER_NAME0	16
+#define DRM_ELD_MANUFACTURER_NAME1	17
+
+#define DRM_ELD_PRODUCT_CODE0		18
+#define DRM_ELD_PRODUCT_CODE1		19
+
+#define DRM_ELD_MONITOR_NAME_STRING	20	/* offsets 20..(20+mnl-1) inclusive */
+
+#define DRM_ELD_CEA_SAD(mnl, sad)	(20 + (mnl) + 3 * (sad))
 
 #pragma pack(1)
 struct edid {
@@ -285,10 +357,12 @@ struct cea_sad {
 struct drm_encoder;
 struct drm_connector;
 struct drm_display_mode;
+
 void drm_edid_to_eld(struct drm_connector *connector, struct edid *edid);
 int drm_edid_to_sad(struct edid *edid, struct cea_sad **sads);
 int drm_av_sync_delay(struct drm_connector *connector,
 		      struct drm_display_mode *mode);
+
 struct drm_connector *drm_select_eld(struct drm_encoder *encoder,
 				     struct drm_display_mode *mode);
 
