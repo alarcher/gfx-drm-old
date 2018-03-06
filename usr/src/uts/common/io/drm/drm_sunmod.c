@@ -373,8 +373,7 @@ drm_gem_unmap(devmap_cookie_t dhc, void *pvt, offset_t off, size_t len,
 	 */
 	mutex_lock(&dev->page_fault_lock);
 	if (!list_empty(&obj->seg_list)) {
-		list_for_each_entry_safe(entry, temp, struct gem_map_list,
-		    &obj->seg_list, head) {
+		list_for_each_entry_safe(entry, temp, &obj->seg_list, head) {
 			(void) devmap_unload(entry->dhp, entry->mapoffset,
 			    entry->maplen);
 			list_del(&entry->head);
